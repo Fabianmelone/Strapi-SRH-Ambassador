@@ -1,9 +1,17 @@
 {
   "collectionName": "components_material_materials",
   "info": {
-    "displayName": "material"
+    "displayName": "Duration",
+    "icon": "clock"
   },
   "options": {},
-  "attributes": {},
+  "attributes": {
+    "Start": {
+      "type": "datetime"
+    },
+    "End": {
+      "type": "datetime"
+    }
+  },
   "config": {}
 }

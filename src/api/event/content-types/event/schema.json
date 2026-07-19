@@ -11,10 +11,55 @@
   },
   "pluginOptions": {},
   "attributes": {
+    "Name": {
+      "type": "string",
+      "required": true,
+      "unique": true
+    },
+    "Access": {
+      "type": "enumeration",
+      "enum": [
+        "Private",
+        "Public"
+      ]
+    },
     "material": {
       "type": "component",
       "component": "material.material",
-      "repeatable": true
+      "repeatable": false
+    },
+    "location": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::location.location",
+      "inversedBy": "events"
+    },
+    "materials": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::material.material"
+    },
+    "Capacity": {
+      "type": "integer"
+    },
+    "Is_online": {
+      "type": "boolean"
+    },
+    "Meeting_Link": {
+      "type": "string",
+      "conditions": {
+        "visible": {
+          "==": [
+            {
+              "var": "Is_online"
+            },
+            true
+          ]
+        }
+      }
+    },
+    "Description": {
+      "type": "text"
     }
   }
 }

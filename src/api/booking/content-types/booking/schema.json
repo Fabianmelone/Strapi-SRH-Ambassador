@@ -1,0 +1,41 @@
+{
+  "kind": "collectionType",
+  "collectionName": "bookings",
+  "info": {
+    "singularName": "booking",
+    "pluralName": "bookings",
+    "displayName": "Booking"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "Booking_id": {
+      "type": "uid"
+    },
+    "Booking_Status": {
+      "type": "enumeration",
+      "enum": [
+        "cancelled",
+        "confirmed",
+        "pending",
+        "rejected"
+      ]
+    },
+    "Duration": {
+      "type": "component",
+      "component": "material.material",
+      "repeatable": false
+    },
+    "location": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::location.location",
+      "inversedBy": "bookings"
+    },
+    "Booking_Date_Time": {
+      "type": "datetime"
+    }
+  }
+}

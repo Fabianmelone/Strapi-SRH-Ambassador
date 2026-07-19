@@ -1,0 +1,26 @@
+{
+  "kind": "collectionType",
+  "collectionName": "material_categories",
+  "info": {
+    "singularName": "material-category",
+    "pluralName": "material-categories",
+    "displayName": "Material Category"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "Name": {
+      "type": "string",
+      "required": true,
+      "unique": true
+    },
+    "materials": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::material.material",
+      "mappedBy": "material_category"
+    }
+  }
+}
