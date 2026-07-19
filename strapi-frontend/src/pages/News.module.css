@@ -1,0 +1,200 @@
+.pageHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+
+.pageHeader h1 { font-size: 24px; font-weight: 700; margin-bottom: 2px; }
+.pageHeader p { color: var(--gray-600); font-size: 14px; }
+
+.primaryBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--orange);
+  color: white;
+  font-weight: 600;
+  padding: 9px 16px;
+  border-radius: var(--radius);
+  font-size: 14px;
+  transition: background 0.12s;
+}
+
+.primaryBtn:hover:not(:disabled) { background: var(--orange-dark); }
+.primaryBtn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.formCard {
+  background: var(--white);
+  border: 1px solid var(--gray-200);
+  border-radius: 10px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: var(--shadow);
+}
+
+.formHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.formHeader h2 { font-size: 16px; font-weight: 600; }
+
+.closeBtn {
+  background: none;
+  color: var(--gray-400);
+  display: flex;
+  padding: 4px;
+  border-radius: 4px;
+}
+
+.closeBtn:hover { color: var(--black); }
+
+.form { display: flex; flex-direction: column; gap: 16px; }
+
+.fieldRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.field { display: flex; flex-direction: column; gap: 6px; }
+.field label { font-size: 13px; font-weight: 600; }
+
+.field input,
+.field select,
+.field textarea {
+  padding: 9px 12px;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius);
+  background: var(--white);
+  transition: border-color 0.15s;
+  resize: vertical;
+}
+
+.field input:focus,
+.field select:focus,
+.field textarea:focus { border-color: var(--orange); }
+
+.formActions { display: flex; gap: 10px; justify-content: flex-end; }
+
+.cancelBtn {
+  padding: 9px 16px;
+  border-radius: var(--radius);
+  font-size: 14px;
+  font-weight: 600;
+  background: var(--gray-100);
+  color: var(--gray-600);
+  border: 1px solid var(--gray-200);
+  transition: background 0.12s;
+}
+
+.cancelBtn:hover { background: var(--gray-200); }
+
+.error {
+  background: #fff0ec;
+  border: 1px solid #ffc4b0;
+  color: var(--orange-dark);
+  padding: 10px 14px;
+  border-radius: var(--radius);
+  font-size: 13px;
+}
+
+.loading { color: var(--gray-400); padding: 48px; text-align: center; font-size: 14px; }
+
+.emptyState {
+  text-align: center;
+  padding: 64px 24px;
+  color: var(--gray-400);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  font-size: 14px;
+}
+
+.list { display: flex; flex-direction: column; gap: 12px; }
+
+.articleCard {
+  background: var(--white);
+  border: 1px solid var(--gray-200);
+  border-radius: 10px;
+  padding: 20px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  box-shadow: var(--shadow);
+  transition: box-shadow 0.15s;
+}
+
+.articleCard:hover { box-shadow: var(--shadow-md); }
+
+.articleLeft { flex: 1; min-width: 0; }
+
+.articleMeta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.catBadge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.dateMeta {
+  font-size: 12px;
+  color: var(--gray-400);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.articleTitle {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--black);
+  margin-bottom: 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.articleExcerpt {
+  font-size: 13px;
+  color: var(--gray-600);
+  line-height: 1.5;
+  margin-bottom: 8px;
+}
+
+.author {
+  font-size: 12px;
+  color: var(--gray-400);
+}
+
+.deleteBtn {
+  background: none;
+  color: var(--gray-400);
+  padding: 8px;
+  border-radius: var(--radius);
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  transition: color 0.12s, background 0.12s;
+}
+
+.deleteBtn:hover:not(:disabled) {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.deleteBtn:disabled { opacity: 0.4; }

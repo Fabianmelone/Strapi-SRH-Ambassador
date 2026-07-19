@@ -1,0 +1,140 @@
+.greeting {
+  margin-bottom: 32px;
+}
+
+.greeting h1 {
+  font-size: 26px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.greeting p {
+  color: var(--gray-600);
+  font-size: 14px;
+}
+
+.statGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 36px;
+}
+
+.statCard {
+  background: var(--white);
+  border-radius: 10px;
+  border: 1px solid var(--gray-200);
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  box-shadow: var(--shadow);
+  transition: box-shadow 0.15s;
+}
+
+.statCard:hover {
+  box-shadow: var(--shadow-md);
+}
+
+.statIcon {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.statValue {
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1;
+  margin-bottom: 2px;
+}
+
+.statLabel {
+  font-size: 13px;
+  color: var(--gray-600);
+}
+
+.section {
+  background: var(--white);
+  border: 1px solid var(--gray-200);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--gray-200);
+}
+
+.sectionHeader h2 {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.seeAll {
+  font-size: 13px;
+  color: var(--orange);
+  font-weight: 500;
+}
+
+.bookingList {
+  padding: 8px 0;
+}
+
+.empty {
+  padding: 24px 20px;
+  color: var(--gray-400);
+  font-size: 14px;
+  text-align: center;
+}
+
+.bookingRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--gray-100);
+}
+
+.bookingRow:last-child {
+  border-bottom: none;
+}
+
+.bookingIcon {
+  width: 32px;
+  height: 32px;
+  background: var(--gray-100);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--gray-600);
+  flex-shrink: 0;
+}
+
+.bookingInfo {
+  flex: 1;
+}
+
+.bookingLocation {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.bookingDate {
+  font-size: 12px;
+  color: var(--gray-400);
+}
+
+.badge {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: capitalize;
+}
