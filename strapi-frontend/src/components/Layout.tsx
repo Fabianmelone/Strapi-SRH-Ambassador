@@ -1,16 +1,26 @@
 import { NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { CalendarDays, MapPin, Newspaper, LogOut, LayoutDashboard } from 'lucide-react'
+import { CalendarDays, MapPin, Newspaper, LogOut, LayoutDashboard, Package, Building2 } from 'lucide-react'
 import styles from './Layout.module.css'
 
+const NAV_ITEMS = [
+  { to: '/bookings',  section: 'bookings',  label: 'Bookings',  Icon: CalendarDays },
+  { to: '/events',    section: 'events',    label: 'Events',    Icon: MapPin },
+  { to: '/news',      section: 'news',      label: 'News',      Icon: Newspaper },
+  { to: '/locations', section: 'locations', label: 'Locations', Icon: Building2 },
+  { to: '/materials', section: 'materials', label: 'Materials', Icon: Package },
+]
+
 export default function Layout({ children }: { children: React.ReactNode }) {
-  const { user, logout } = useAuth()
+  const { user, logout, access, accessLoading } = useAuth()
   const navigate = useNavigate()
 
   const handleLogout = () => {
     logout()
     navigate('/login')
   }
+
+  const visibleItems = accessLoading ? [] : NAV_ITEMS.filter(item => access[item.section])
 
   return (
     <div className={styles.shell}>
@@ -25,18 +35,12 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             <LayoutDashboard size={18} />
             Dashboard
           </NavLink>
-          <NavLink to="/bookings" className={({ isActive }) => `${styles.navItem} ${isActive ? styles.active : ''}`}>
-            <CalendarDays size={18} />
-            Bookings
-          </NavLink>
-          <NavLink to="/events" className={({ isActive }) => `${styles.navItem} ${isActive ? styles.active : ''}`}>
-            <MapPin size={18} />
-            Events
-          </NavLink>
-          <NavLink to="/news" className={({ isActive }) => `${styles.navItem} ${isActive ? styles.active : ''}`}>
-            <Newspaper size={18} />
-            News
-          </NavLink>
+          {visibleItems.map(({ to, label, Icon }) => (
+            <NavLink key={to} to={to} className={({ isActive }) => `${styles.navItem} ${isActive ? styles.active : ''}`}>
+              <Icon size={18} />
+              {label}
+            </NavLink>
+          ))}
         </nav>
 
         <div className={styles.userArea}>

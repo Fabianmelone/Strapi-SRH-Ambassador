@@ -7,11 +7,17 @@ import Dashboard from './pages/Dashboard'
 import Bookings from './pages/Bookings'
 import Events from './pages/Events'
 import News from './pages/News'
+import Locations from './pages/Locations'
+import Materials from './pages/Materials'
 
-function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { user, loading } = useAuth()
+function ProtectedRoute({ section, children }: { section?: string; children: React.ReactNode }) {
+  const { user, loading, access, accessLoading } = useAuth()
   if (loading) return null
   if (!user) return <Navigate to="/login" replace />
+  if (section) {
+    if (accessLoading) return <Layout>{null}</Layout>
+    if (!access[section]) return <Navigate to="/" replace />
+  }
   return <Layout>{children}</Layout>
 }
 
@@ -27,9 +33,11 @@ function AppRoutes() {
     <Routes>
       <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
       <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-      <Route path="/bookings" element={<ProtectedRoute><Bookings /></ProtectedRoute>} />
-      <Route path="/events" element={<ProtectedRoute><Events /></ProtectedRoute>} />
-      <Route path="/news" element={<ProtectedRoute><News /></ProtectedRoute>} />
+      <Route path="/bookings" element={<ProtectedRoute section="bookings"><Bookings /></ProtectedRoute>} />
+      <Route path="/events" element={<ProtectedRoute section="events"><Events /></ProtectedRoute>} />
+      <Route path="/news" element={<ProtectedRoute section="news"><News /></ProtectedRoute>} />
+      <Route path="/locations" element={<ProtectedRoute section="locations"><Locations /></ProtectedRoute>} />
+      <Route path="/materials" element={<ProtectedRoute section="materials"><Materials /></ProtectedRoute>} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   )

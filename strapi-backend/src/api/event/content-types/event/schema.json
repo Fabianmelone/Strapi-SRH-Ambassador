@@ -34,6 +34,11 @@
       "target": "api::location.location",
       "inversedBy": "events"
     },
+    "booking": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::booking.booking"
+    },
     "materials": {
       "type": "relation",
       "relation": "oneToMany",

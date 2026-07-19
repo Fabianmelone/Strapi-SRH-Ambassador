@@ -556,6 +556,7 @@ export interface ApiEventEvent extends Struct.CollectionTypeSchema {
   };
   attributes: {
     Access: Schema.Attribute.Enumeration<['Private', 'Public']>;
+    booking: Schema.Attribute.Relation<'oneToOne', 'api::booking.booking'>;
     Capacity: Schema.Attribute.Integer;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &

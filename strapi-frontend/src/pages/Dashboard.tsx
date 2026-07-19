@@ -81,19 +81,19 @@ export default function Dashboard() {
               <div className={styles.bookingIcon}><Clock size={16} /></div>
               <div className={styles.bookingInfo}>
                 <div className={styles.bookingLocation}>
-                  {b.attributes?.location?.data?.attributes?.Name ?? 'Unknown location'}
+                  {b.location?.Name ?? 'Unknown location'}
                 </div>
                 <div className={styles.bookingDate}>
-                  {b.attributes?.Booking_Date_Time
-                    ? new Date(b.attributes.Booking_Date_Time).toLocaleString()
+                  {b.Booking_Date_Time
+                    ? new Date(b.Booking_Date_Time).toLocaleString()
                     : '—'}
                 </div>
               </div>
               <span
                 className={styles.badge}
-                style={{ color: statusColor[b.attributes?.Booking_Status] || '#555' }}
+                style={{ color: statusColor[b.Booking_Status] || '#555' }}
               >
-                {b.attributes?.Booking_Status ?? 'unknown'}
+                {b.Booking_Status ?? 'unknown'}
               </span>
             </div>
           ))}
