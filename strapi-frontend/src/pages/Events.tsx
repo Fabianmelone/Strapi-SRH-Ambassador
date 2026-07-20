@@ -65,6 +65,29 @@ export default function Events() {
   const usedBookingIds = new Set(events.map((ev: any) => ev.booking?.id).filter(Boolean))
   const availableBookings = confirmedBookings.filter((bk: any) => !usedBookingIds.has(bk.id))
 
+  // ISO -> value for a datetime-local input (YYYY-MM-DDTHH:mm). Comparing these
+  // strings lexicographically gives correct chronological order.
+  const toInput = (iso?: string | null) => (iso ? new Date(iso).toISOString().slice(0, 16) : '')
+
+  // Validate an event's custom time + capacity against its booking/location.
+  // Returns an error message, or '' if valid.
+  const validateAgainstBooking = (
+    bk: any, custom: boolean, start: string, end: string, capacity: string,
+  ): string => {
+    const maxCap = bk?.location?.max_capacity
+    if (maxCap != null && capacity && Number(capacity) > Number(maxCap)) {
+      return `Capacity can’t exceed the location’s capacity (${maxCap}).`
+    }
+    if (custom) {
+      const bs = toInput(bk?.duration?.start_datetime)
+      const be = toInput(bk?.duration?.end_datetime)
+      if (start && end && end < start) return 'End must be after start.'
+      if (bs && start && start < bs) return 'The event can’t start before the booking’s start time.'
+      if (be && end && end > be) return 'The event can’t end after the booking’s end time.'
+    }
+    return ''
+  }
+
   const eventImage = (ev: any, small = false): string | null => {
     const img = Array.isArray(ev?.Thumbnail) ? ev.Thumbnail[0] : ev?.Thumbnail
     const url = (small && img?.formats?.thumbnail?.url) || img?.url
@@ -105,6 +128,8 @@ export default function Events() {
       setError('Please select a confirmed booking to create this event for.')
       return
     }
+    const vErr = validateAgainstBooking(bk, !useBookingTime, form.start, form.end, form.Capacity)
+    if (vErr) { setError(vErr); return }
     setSubmitting(true)
     try {
       const thumbnail = imageFile ? await uploadMedia(imageFile) : undefined
@@ -172,8 +197,11 @@ export default function Events() {
   const saveEdit = async (e: FormEvent) => {
     e.preventDefault()
     if (!selected) return
-    setSavingEdit(true)
     setError('')
+    const bkCheck = editBookingOptions().find((b: any) => String(b.id) === editForm.booking)
+    const vErr = validateAgainstBooking(bkCheck, !editUseBookingTime, editForm.start, editForm.end, editForm.Capacity)
+    if (vErr) { setError(vErr); return }
+    setSavingEdit(true)
     try {
       const bk = editBookingOptions().find((b: any) => String(b.id) === editForm.booking)
       const thumbnail = editImageFile ? await uploadMedia(editImageFile) : undefined
@@ -218,6 +246,20 @@ export default function Events() {
   }
 
   const noBookingsAvailable = availableBookings.length === 0
+
+  // Bounds from the selected booking, for input min/max on the create form.
+  const createBk = availableBookings.find((b: any) => String(b.id) === form.booking)
+  const createBounds = {
+    start: toInput(createBk?.duration?.start_datetime),
+    end: toInput(createBk?.duration?.end_datetime),
+    maxCap: createBk?.location?.max_capacity as number | undefined,
+  }
+  const editBk = editBookingOptions().find((b: any) => String(b.id) === editForm.booking)
+  const editBounds = {
+    start: toInput(editBk?.duration?.start_datetime),
+    end: toInput(editBk?.duration?.end_datetime),
+    maxCap: editBk?.location?.max_capacity as number | undefined,
+  }
 
   return (
     <div>
@@ -271,8 +313,8 @@ export default function Events() {
               </div>
             </div>
             <div className={styles.field}>
-              <label>Capacity</label>
-              <input type="number" min={1} value={form.Capacity} onChange={e => setForm(f => ({ ...f, Capacity: e.target.value }))} required placeholder="50" />
+              <label>Capacity{createBounds.maxCap != null ? ` (max ${createBounds.maxCap})` : ''}</label>
+              <input type="number" min={1} max={createBounds.maxCap ?? undefined} value={form.Capacity} onChange={e => setForm(f => ({ ...f, Capacity: e.target.value }))} required placeholder="50" />
             </div>
             <div className={styles.checkRow}>
               <input type="checkbox" id="use_booking_time" checked={useBookingTime} onChange={e => setUseBookingTime(e.target.checked)} />
@@ -294,11 +336,11 @@ export default function Events() {
               <div className={styles.fieldRow}>
                 <div className={styles.field}>
                   <label>Start</label>
-                  <input type="datetime-local" value={form.start} onChange={e => setForm(f => ({ ...f, start: e.target.value }))} />
+                  <input type="datetime-local" value={form.start} min={createBounds.start || undefined} max={createBounds.end || undefined} onChange={e => setForm(f => ({ ...f, start: e.target.value }))} />
                 </div>
                 <div className={styles.field}>
                   <label>End</label>
-                  <input type="datetime-local" value={form.end} min={form.start || undefined} onChange={e => setForm(f => ({ ...f, end: e.target.value }))} />
+                  <input type="datetime-local" value={form.end} min={form.start || createBounds.start || undefined} max={createBounds.end || undefined} onChange={e => setForm(f => ({ ...f, end: e.target.value }))} />
                 </div>
               </div>
             )}
@@ -406,7 +448,7 @@ export default function Events() {
               </div>
               <div className={styles.field}>
                 <label>Capacity</label>
-                <input type="number" min={1} value={editForm.Capacity} onChange={e => setEditForm(f => ({ ...f, Capacity: e.target.value }))} required />
+                <input type="number" min={1} max={editBounds.maxCap ?? undefined} value={editForm.Capacity} onChange={e => setEditForm(f => ({ ...f, Capacity: e.target.value }))} required />
               </div>
               <div className={styles.checkRow}>
                 <input type="checkbox" id="edit_use_booking_time" checked={editUseBookingTime} onChange={e => setEditUseBookingTime(e.target.checked)} />
@@ -416,11 +458,11 @@ export default function Events() {
                 <div className={styles.fieldRow}>
                   <div className={styles.field}>
                     <label>Start</label>
-                    <input type="datetime-local" value={editForm.start} onChange={e => setEditForm(f => ({ ...f, start: e.target.value }))} />
+                    <input type="datetime-local" value={editForm.start} min={editBounds.start || undefined} max={editBounds.end || undefined} onChange={e => setEditForm(f => ({ ...f, start: e.target.value }))} />
                   </div>
                   <div className={styles.field}>
                     <label>End</label>
-                    <input type="datetime-local" value={editForm.end} min={editForm.start || undefined} onChange={e => setEditForm(f => ({ ...f, end: e.target.value }))} />
+                    <input type="datetime-local" value={editForm.end} min={editForm.start || editBounds.start || undefined} max={editBounds.end || undefined} onChange={e => setEditForm(f => ({ ...f, end: e.target.value }))} />
                   </div>
                 </div>
               )}
