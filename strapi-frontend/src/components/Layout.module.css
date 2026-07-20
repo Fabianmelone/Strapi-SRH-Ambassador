@@ -191,6 +191,17 @@
 
 .main {
   flex: 1;
-  padding: 32px;
-  max-width: 1000px;
+  min-width: 0;
+  width: 100%;
+  padding: 32px 48px;
+}
+
+@media (max-width: 900px) {
+  .main { padding: 24px 28px; }
+}
+
+@media (max-width: 560px) {
+  .main { padding: 16px; }
+  .sidebar { width: 68px; padding-top: 14px; }
+  .sidebar.expanded { width: 82vw; min-width: 0; max-width: 320px; }
 }

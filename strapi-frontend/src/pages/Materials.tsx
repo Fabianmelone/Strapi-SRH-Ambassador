@@ -244,14 +244,14 @@ export default function Materials() {
           {materials.map((m: any) => (
             <div key={m.id} className={`${styles.tableRow} ${canClick ? styles.clickable : ''}`} onClick={() => canClick && setSelected(m)}>
               <span className={styles.materialName}>{m.Name}</span>
-              <span>
+              <span data-label="Category">
                 {m.material_category?.Name ? (
                   <span className={styles.catBadge}>{m.material_category.Name}</span>
                 ) : (
                   <span className={styles.noCategory}>—</span>
                 )}
               </span>
-              <span className={styles.capacity}>{m.Capacity ?? '—'}</span>
+              <span className={styles.capacity} data-label="Quantity">{m.Capacity ?? '—'}</span>
               <span className={styles.actions}>
                 {allowDelete && (
                   <button
