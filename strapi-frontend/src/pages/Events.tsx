@@ -430,9 +430,6 @@ export default function Events() {
               <div className={styles.eventMeta}>
                 {ev.location?.Name && <span><MapPin size={13} /> {ev.location.Name}</span>}
                 {ev.Capacity && <span><Users size={13} /> {ev.Capacity} capacity</span>}
-                {Array.isArray(ev.materials) && ev.materials.length > 0 && (
-                  <span><Package size={13} /> {ev.materials.length} material{ev.materials.length > 1 ? 's' : ''}</span>
-                )}
                 {ev.attendeeCount > 0 && (
                   <span><Users size={13} /> {ev.attendeeCount} attending</span>
                 )}
