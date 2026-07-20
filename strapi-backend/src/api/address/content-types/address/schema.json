@@ -11,6 +11,9 @@
   },
   "pluginOptions": {},
   "attributes": {
+    "street_name": {
+      "type": "string"
+    },
     "building_number": {
       "type": "integer"
     },
@@ -18,9 +21,6 @@
       "type": "string"
     },
     "Country": {
-      "type": "string"
-    },
-    "street_name": {
       "type": "string"
     },
     "postal_code": {

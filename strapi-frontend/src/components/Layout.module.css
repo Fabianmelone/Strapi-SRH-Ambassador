@@ -56,12 +56,12 @@
 .logo {
   display: flex;
   align-items: center;
-  gap: 10px;
   font-size: 18px;
   font-weight: 700;
   color: #fff;
   overflow: hidden;
   white-space: nowrap;
+  gap: 0;
 }
 
 .logo img {

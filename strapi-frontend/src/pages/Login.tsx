@@ -3,6 +3,7 @@ import type { FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import styles from './Login.module.css'
+import srhLogo from '../assets/srh-logo-no-background.png'
 
 export default function Login() {
   const { login } = useAuth()
@@ -31,7 +32,7 @@ export default function Login() {
       <div className={styles.card}>
         <div className={styles.header}>
           <div className={styles.logo}>
-            <span className={styles.logoAccent}>SRH</span> Ambassador
+            <img src={srhLogo} alt="SRH Logo" /> Events
           </div>
           <p className={styles.subtitle}>Sign in to your account</p>
         </div>

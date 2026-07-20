@@ -225,20 +225,13 @@ export default function News() {
                   </div>
                 )}
                 <div className={styles.articleLeft}>
+                  <h3 className={styles.articleTitle}>{a.title}</h3>
+                  {text && <p className={styles.articleExcerpt}>{text}{text.length >= 140 ? '…' : ''}</p>}
                   <div className={styles.articleMeta}>
                     <span className={styles.catBadge} style={{ color: catMeta.color, background: catMeta.bg }}>
                       <Tag size={11} /> {cat}
                     </span>
-                    {a.uploaded_at && (
-                      <span className={styles.dateMeta}>
-                        <Calendar size={11} />
-                        {new Date(a.uploaded_at).toLocaleDateString('en-GB', { dateStyle: 'medium' })}
-                      </span>
-                    )}
                   </div>
-                  <h3 className={styles.articleTitle}>{a.title}</h3>
-                  {text && <p className={styles.articleExcerpt}>{text}{text.length >= 140 ? '…' : ''}</p>}
-                  {a.author?.username && <div className={styles.author}>By {a.author.username}</div>}
                 </div>
                 {allowDelete && (
                   <button

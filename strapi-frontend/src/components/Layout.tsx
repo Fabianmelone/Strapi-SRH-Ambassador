@@ -1,17 +1,17 @@
 import { useState } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { CalendarDays, MapPin, Newspaper, LogOut, LayoutDashboard, Package, Building2, Menu, ChevronLeft } from 'lucide-react'
+import { CalendarDays, MapPin, Newspaper, LogOut, LayoutDashboard, Package, Megaphone, Menu, ChevronLeft } from 'lucide-react'
 import styles from './Layout.module.css'
 import srhLogo from '../assets/srh-logo-white.png'
 
 const NAV_ITEMS = [
   { to: '/',          section: null,        label: 'Dashboard', Icon: LayoutDashboard },
   { to: '/bookings',  section: 'bookings',  label: 'Bookings',  Icon: CalendarDays },
-  { to: '/events',    section: 'events',    label: 'Events',    Icon: MapPin },
-  { to: '/news',      section: 'news',      label: 'News',      Icon: Newspaper },
-  { to: '/locations', section: 'locations', label: 'Locations', Icon: Building2 },
+  { to: '/events',    section: 'events',    label: 'Events',    Icon: Megaphone },
+  { to: '/locations', section: 'locations', label: 'Locations', Icon: MapPin },
   { to: '/materials', section: 'materials', label: 'Materials', Icon: Package },
+  { to: '/news',      section: 'news',      label: 'News',      Icon: Newspaper },
 ]
 
 export default function Layout({ children }: { children: React.ReactNode }) {

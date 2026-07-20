@@ -3,7 +3,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--gray-100);
+  background: var(--orange);
   padding: 24px;
 }
 
@@ -22,10 +22,20 @@
 }
 
 .logo {
-  font-size: 24px;
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  font-size: 18px;
   font-weight: 700;
-  letter-spacing: -0.5px;
-  margin-bottom: 8px;
+  overflow: hidden;
+  white-space: nowrap;
+  font-size: 1.75rem;
+}
+
+.logo img {
+  height: 40px;
+  width: auto;
+  object-fit: contain;
 }
 
 .logoAccent {
