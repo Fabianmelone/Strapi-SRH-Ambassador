@@ -44,6 +44,11 @@
       "relation": "oneToMany",
       "target": "api::material.material"
     },
+    "attendees": {
+      "type": "relation",
+      "relation": "manyToMany",
+      "target": "plugin::users-permissions.user"
+    },
     "Capacity": {
       "type": "integer"
     },

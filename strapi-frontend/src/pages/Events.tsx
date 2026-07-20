@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
-import { getEvents, createEvent, updateEvent, deleteEvent, getBookings, getMaterials, strapiMediaUrl, uploadMedia } from '../api/client'
+import { getEvents, createEvent, updateEvent, deleteEvent, getBookings, getMaterials, strapiMediaUrl, uploadMedia, registerForEvent, unregisterFromEvent } from '../api/client'
 import { useAuth } from '../context/AuthContext'
 import { canView, canEdit, canDelete, canCreate } from '../permissions'
 import Modal from '../components/Modal'
@@ -29,6 +29,7 @@ export default function Events() {
   // When true, the event inherits its selected booking's start/end instead of custom times.
   const [useBookingTime, setUseBookingTime] = useState(true)
   const [editUseBookingTime, setEditUseBookingTime] = useState(false)
+  const [registering, setRegistering] = useState(false)
 
   const canClick = canView(capabilities, 'events')
 
@@ -234,6 +235,25 @@ export default function Events() {
 
   const closeModal = () => { setSelected(null); setEditing(false); setError('') }
 
+  const handleToggleRegister = async () => {
+    if (!selected) return
+    setRegistering(true)
+    setError('')
+    try {
+      const res = selected.isRegistered
+        ? await unregisterFromEvent(selected.documentId)
+        : await registerForEvent(selected.documentId)
+      const { registered, count } = res.data
+      setSelected((s: any) => (s ? { ...s, isRegistered: registered, attendeeCount: count } : s))
+      setEvents(prev => prev.map(ev =>
+        ev.id === selected.id ? { ...ev, isRegistered: registered, attendeeCount: count } : ev))
+    } catch (err: any) {
+      setError(err?.response?.data?.error?.message || 'Could not update your registration.')
+    } finally {
+      setRegistering(false)
+    }
+  }
+
   const handleDelete = async () => {
     if (!selected || !confirm('Delete this event?')) return
     try {
@@ -413,6 +433,9 @@ export default function Events() {
                 {Array.isArray(ev.materials) && ev.materials.length > 0 && (
                   <span><Package size={13} /> {ev.materials.length} material{ev.materials.length > 1 ? 's' : ''}</span>
                 )}
+                {ev.attendeeCount > 0 && (
+                  <span><Users size={13} /> {ev.attendeeCount} attending</span>
+                )}
               </div>
             </div>
           ))}
@@ -573,6 +596,29 @@ export default function Events() {
                   </div>
                 )}
               </div>
+              {(() => {
+                const count = selected.attendeeCount ?? 0
+                const cap = selected.Capacity
+                const isFull = !selected.isRegistered && cap != null && count >= cap
+                return (
+                  <div className={styles.registerRow}>
+                    <span className={styles.attendeeCount}>
+                      <Users size={15} /> {count}{cap != null ? ` / ${cap}` : ''} attending
+                    </span>
+                    {isFull ? (
+                      <button className={styles.unregisterBtn} disabled>Event full</button>
+                    ) : (
+                      <button
+                        className={selected.isRegistered ? styles.unregisterBtn : styles.registerBtn}
+                        onClick={handleToggleRegister}
+                        disabled={registering}
+                      >
+                        {registering ? 'Saving…' : selected.isRegistered ? 'Cancel registration' : 'Register'}
+                      </button>
+                    )}
+                  </div>
+                )
+              })()}
               {(allowEdit || allowDelete) && (
                 <div className={styles.modalActions}>
                   {allowDelete && (

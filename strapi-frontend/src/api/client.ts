@@ -92,6 +92,14 @@ export const updateEvent = (id: string, data: Partial<{
 export const deleteEvent = (id: string) =>
   api.delete(`/events/${id}`)
 
+// Self-service attendance — the current user joins/leaves the event.
+// Returns { registered, count }.
+export const registerForEvent = (id: string) =>
+  api.post(`/events/${id}/register`)
+
+export const unregisterFromEvent = (id: string) =>
+  api.post(`/events/${id}/unregister`)
+
 // News Articles
 export const getNewsArticles = () =>
   api.get('/news-articles?populate=*&sort=createdAt:desc')

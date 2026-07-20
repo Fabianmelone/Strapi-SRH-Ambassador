@@ -299,3 +299,40 @@
   .pageHeader { flex-direction: column; align-items: stretch; gap: 12px; }
   .fieldRow { grid-template-columns: 1fr; }
 }
+
+.registerRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 0 4px;
+  border-top: 1px solid var(--gray-100);
+}
+
+.attendeeCount {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--gray-600);
+}
+
+.registerBtn {
+  display: flex; align-items: center; gap: 6px;
+  background: var(--orange); color: #fff; font-weight: 600;
+  padding: 9px 18px; border-radius: var(--radius); font-size: 14px;
+  transition: background 0.12s;
+}
+.registerBtn:hover:not(:disabled) { background: var(--orange-dark); }
+.registerBtn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.unregisterBtn {
+  display: flex; align-items: center; gap: 6px;
+  background: var(--gray-100); color: var(--gray-600); font-weight: 600;
+  border: 1px solid var(--gray-200);
+  padding: 9px 18px; border-radius: var(--radius); font-size: 14px;
+  transition: background 0.12s;
+}
+.unregisterBtn:hover:not(:disabled) { background: var(--gray-200); }
+.unregisterBtn:disabled { opacity: 0.6; cursor: not-allowed; }
