@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
-import { getEvents, createEvent, updateEvent, getBookings, getMaterials } from '../api/client'
+import { getEvents, createEvent, updateEvent, getBookings, getMaterials, strapiMediaUrl } from '../api/client'
 import { useAuth } from '../context/AuthContext'
 import { canViewDetail, canEdit, canCreate } from '../permissions'
 import Modal from '../components/Modal'
@@ -55,6 +55,12 @@ export default function Events() {
   // Bookings already tied to an event — each confirmed booking backs at most one event.
   const usedBookingIds = new Set(events.map((ev: any) => ev.booking?.id).filter(Boolean))
   const availableBookings = confirmedBookings.filter((bk: any) => !usedBookingIds.has(bk.id))
+
+  const eventImage = (ev: any, small = false): string | null => {
+    const img = Array.isArray(ev?.Thumbnail) ? ev.Thumbnail[0] : ev?.Thumbnail
+    const url = (small && img?.formats?.thumbnail?.url) || img?.url
+    return url ? strapiMediaUrl(url) : null
+  }
 
   const bookingLabel = (bk: any) => {
     const loc = bk?.location?.Name ?? 'No location'
@@ -271,6 +277,11 @@ export default function Events() {
               className={`${styles.eventCard} ${canClick ? styles.clickable : ''}`}
               onClick={() => canClick && setSelected(ev)}
             >
+              {eventImage(ev, true) && (
+                <div className={styles.cardImage}>
+                  <img src={eventImage(ev, true)!} alt={ev.Name} />
+                </div>
+              )}
               <div className={styles.eventTop}>
                 <span className={styles.accessBadge} data-access={ev.Access?.toLowerCase()}>{ev.Access ?? 'Public'}</span>
                 {ev.Is_online && <span className={styles.onlineBadge}><Wifi size={12} /> Online</span>}
@@ -358,6 +369,11 @@ export default function Events() {
             </form>
           ) : (
             <>
+              {eventImage(selected) && (
+                <div className={styles.detailImage}>
+                  <img src={eventImage(selected)!} alt={selected.Name} />
+                </div>
+              )}
               <div className={styles.detailBadges}>
                 <span className={styles.accessBadge} data-access={selected.Access?.toLowerCase()}>{selected.Access}</span>
                 {selected.Is_online && <span className={styles.onlineBadge}><Wifi size={12} /> Online</span>}

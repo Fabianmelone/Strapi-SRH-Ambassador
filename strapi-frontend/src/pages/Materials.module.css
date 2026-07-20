@@ -251,3 +251,12 @@
   transition: background 0.12s;
 }
 .editBtn:hover { background: var(--orange-dark); }
+
+/* Glassmorphism card treatment */
+.table, .formCard, .inlineForm {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+}

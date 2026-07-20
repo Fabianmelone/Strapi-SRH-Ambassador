@@ -41,7 +41,7 @@ export const updateBooking = (id: string, data: Partial<{
 
 // Events
 export const getEvents = () =>
-  api.get('/events?populate[location]=true&populate[materials]=true&populate[booking][populate][0]=location&sort=createdAt:desc&status=published')
+  api.get('/events?populate[location]=true&populate[materials]=true&populate[Thumbnail]=true&populate[booking][populate][0]=location&sort=createdAt:desc&status=published')
 
 export const createEvent = (data: {
   Name: string

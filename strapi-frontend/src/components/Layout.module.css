@@ -4,16 +4,53 @@
 }
 
 .sidebar {
-  width: 240px;
+  width: 96px;
   flex-shrink: 0;
-  background: var(--white);
-  border-right: 1px solid var(--gray-200);
+  background: var(--orange);
+  color: #fff;
   display: flex;
   flex-direction: column;
-  padding: 24px 0 16px;
+  padding: 18px 0 16px;
   position: sticky;
   top: 0;
   height: 100svh;
+  overflow: hidden;
+  transition: width 0.22s ease;
+}
+
+.sidebar.expanded {
+  width: 25vw;
+  min-width: 300px;
+  max-width: 460px;
+}
+
+/* Top: toggle + logo */
+.top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 18px 20px;
+  margin-bottom: 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.22);
+  min-height: 40px;
+}
+
+.toggle {
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.12s;
+}
+
+.toggle:hover {
+  background: #fff;
+  color: var(--orange);
 }
 
 .logo {
@@ -22,60 +59,75 @@
   gap: 10px;
   font-size: 18px;
   font-weight: 700;
-  padding: 0 20px 24px;
-  letter-spacing: -0.3px;
-  border-bottom: 1px solid var(--gray-200);
-  margin-bottom: 16px;
+  color: #fff;
+  overflow: hidden;
+  white-space: nowrap;
 }
 
 .logo img {
-  height: 32px;
+  height: 30px;
   width: auto;
   object-fit: contain;
 }
 
-.logoAccent {
-  color: var(--orange);
-  margin-right: 4px;
+.logoText {
+  opacity: 1;
+  transition: opacity 0.15s;
 }
 
+.sidebar:not(.expanded) .logo { display: none; }
+
+/* Nav */
 .nav {
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  padding: 0 10px;
+  gap: 6px;
+  padding: 0 14px;
   flex: 1;
 }
 
 .navItem {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 9px 12px;
-  border-radius: var(--radius);
-  color: var(--gray-600);
-  font-size: 14px;
-  font-weight: 500;
+  gap: 18px;
+  padding: 18px 20px;
+  border-radius: 14px;
+  color: #fff;
+  font-size: 19px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
   transition: background 0.12s, color 0.12s;
 }
 
-.navItem:hover {
-  background: var(--gray-100);
-  color: var(--black);
-}
+.navIcon { flex-shrink: 0; }
 
+.navItem:hover,
 .navItem.active {
-  background: var(--orange-light);
+  background: #fff;
   color: var(--orange);
 }
 
+.sidebar:not(.expanded) .navItem {
+  justify-content: center;
+  padding: 15px 0;
+}
+
+.sidebar:not(.expanded) .navLabel { display: none; }
+
+/* User area */
 .userArea {
-  padding: 12px 12px 0;
-  border-top: 1px solid var(--gray-200);
+  padding: 14px 14px 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.22);
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-top: 16px;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.sidebar:not(.expanded) .userArea {
+  flex-direction: column;
+  gap: 12px;
 }
 
 .userInfo {
@@ -87,22 +139,27 @@
 }
 
 .avatar {
-  width: 32px;
-  height: 32px;
+  width: 38px;
+  height: 38px;
   border-radius: 50%;
-  background: var(--orange);
-  color: white;
+  background: #fff;
+  color: var(--orange);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 700;
   flex-shrink: 0;
 }
 
+.userMeta { min-width: 0; }
+
+.sidebar:not(.expanded) .userMeta { display: none; }
+
 .userName {
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 600;
+  color: #fff;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -110,17 +167,17 @@
 
 .userEmail {
   font-size: 11px;
-  color: var(--gray-400);
+  color: rgba(255, 255, 255, 0.75);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .logoutBtn {
-  background: none;
-  color: var(--gray-400);
-  padding: 6px;
-  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
+  padding: 9px;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   flex-shrink: 0;
@@ -128,12 +185,12 @@
 }
 
 .logoutBtn:hover {
-  background: var(--gray-100);
+  background: #fff;
   color: var(--orange);
 }
 
 .main {
   flex: 1;
   padding: 32px;
-  max-width: 960px;
+  max-width: 1000px;
 }
