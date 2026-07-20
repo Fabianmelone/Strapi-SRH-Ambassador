@@ -1,15 +1,16 @@
 import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
-import { getEvents, createEvent, updateEvent, getBookings, getMaterials, strapiMediaUrl } from '../api/client'
+import { getEvents, createEvent, updateEvent, deleteEvent, getBookings, getMaterials, strapiMediaUrl } from '../api/client'
 import { useAuth } from '../context/AuthContext'
-import { canViewDetail, canEdit, canCreate } from '../permissions'
+import { canView, canEdit, canDelete, canCreate } from '../permissions'
 import Modal from '../components/Modal'
-import { Plus, X, MapPin, Users, Wifi, Package, Pencil, CalendarCheck } from 'lucide-react'
+import { Plus, X, MapPin, Users, Wifi, Package, Pencil, CalendarCheck, Trash2 } from 'lucide-react'
 import styles from './Events.module.css'
 
 export default function Events() {
-  const { roleName, capabilities } = useAuth()
+  const { capabilities } = useAuth()
   const allowEdit = canEdit(capabilities, 'events')
+  const allowDelete = canDelete(capabilities, 'events')
   const allowCreate = canCreate(capabilities, 'events')
   const [events, setEvents] = useState<any[]>([])
   const [materials, setMaterials] = useState<any[]>([])
@@ -22,7 +23,7 @@ export default function Events() {
   const [editing, setEditing] = useState(false)
   const [savingEdit, setSavingEdit] = useState(false)
 
-  const canClick = canViewDetail('events', roleName)
+  const canClick = canView(capabilities, 'events')
 
   const emptyForm = {
     Name: '', Access: 'Public', Capacity: '', Is_online: false,
@@ -168,6 +169,17 @@ export default function Events() {
   }
 
   const closeModal = () => { setSelected(null); setEditing(false); setError('') }
+
+  const handleDelete = async () => {
+    if (!selected || !confirm('Delete this event?')) return
+    try {
+      await deleteEvent(selected.documentId)
+      setEvents(prev => prev.filter(ev => ev.id !== selected.id))
+      closeModal()
+    } catch (err: any) {
+      setError(err?.response?.data?.error?.message || 'Failed to delete event.')
+    }
+  }
 
   const noBookingsAvailable = availableBookings.length === 0
 
@@ -417,9 +429,14 @@ export default function Events() {
                   </div>
                 )}
               </div>
-              {allowEdit && (
+              {(allowEdit || allowDelete) && (
                 <div className={styles.modalActions}>
-                  <button className={styles.editBtn} onClick={openEdit}><Pencil size={14} /> Edit Event</button>
+                  {allowDelete && (
+                    <button className={styles.deleteActionBtn} onClick={handleDelete}><Trash2 size={14} /> Delete</button>
+                  )}
+                  {allowEdit && (
+                    <button className={styles.editBtn} onClick={openEdit}><Pencil size={14} /> Edit Event</button>
+                  )}
                 </div>
               )}
             </>

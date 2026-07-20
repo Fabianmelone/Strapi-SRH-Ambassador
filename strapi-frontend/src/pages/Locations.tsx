@@ -5,7 +5,7 @@ import {
   deleteLocation, createAddress, updateAddress, strapiMediaUrl,
 } from '../api/client'
 import { useAuth } from '../context/AuthContext'
-import { canViewDetail, canEdit, canDelete, canCreate } from '../permissions'
+import { canView, canEdit, canDelete, canCreate } from '../permissions'
 import Modal from '../components/Modal'
 import { Plus, X, Trash2, Building2, CheckCircle2, XCircle, Pencil } from 'lucide-react'
 import styles from './Locations.module.css'
@@ -19,7 +19,7 @@ export default function Locations() {
   const [selected, setSelected] = useState<any | null>(null)
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
-  const canClick = canViewDetail('locations', roleName)
+  const canClick = canView(capabilities, 'locations')
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
   const [deletingId, setDeletingId] = useState<number | null>(null)

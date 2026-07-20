@@ -1,15 +1,16 @@
 import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
-import { getBookings, getLocations, createBooking, updateBooking } from '../api/client'
+import { getBookings, getLocations, createBooking, updateBooking, deleteBooking } from '../api/client'
 import { useAuth } from '../context/AuthContext'
-import { canViewDetail, canEdit, canCreate } from '../permissions'
+import { canView, canEdit, canDelete, canCreate } from '../permissions'
 import Modal from '../components/Modal'
-import { Plus, X, MapPin, Calendar, Pencil } from 'lucide-react'
+import { Plus, X, MapPin, Calendar, Pencil, Trash2 } from 'lucide-react'
 import styles from './Bookings.module.css'
 
 export default function Bookings() {
-  const { roleName, capabilities } = useAuth()
+  const { capabilities } = useAuth()
   const allowEdit = canEdit(capabilities, 'bookings')
+  const allowDelete = canDelete(capabilities, 'bookings')
   const allowCreate = canCreate(capabilities, 'bookings')
   const [bookings, setBookings] = useState<any[]>([])
   const [locations, setLocations] = useState<any[]>([])
@@ -22,7 +23,7 @@ export default function Bookings() {
   const [editForm, setEditForm] = useState({ Booking_Status: '', location: '', Booking_Date_Time: '' })
   const [savingEdit, setSavingEdit] = useState(false)
 
-  const canClick = canViewDetail('bookings', roleName)
+  const canClick = canView(capabilities, 'bookings')
 
   const [form, setForm] = useState({ location: '', Booking_Date_Time: '' })
 
@@ -89,6 +90,17 @@ export default function Bookings() {
   }
 
   const closeModal = () => { setSelected(null); setEditing(false); setError('') }
+
+  const handleDelete = async () => {
+    if (!selected || !confirm('Delete this booking?')) return
+    try {
+      await deleteBooking(selected.documentId)
+      setBookings(prev => prev.filter(b => b.id !== selected.id))
+      closeModal()
+    } catch (err: any) {
+      setError(err?.response?.data?.error?.message || 'Failed to delete booking.')
+    }
+  }
 
   const statusMeta: Record<string, { label: string; color: string; bg: string }> = {
     confirmed: { label: 'Confirmed', color: '#166534', bg: '#dcfce7' },
@@ -245,9 +257,14 @@ export default function Bookings() {
                   <span className={styles.detailLabel}>Created</span>
                   <span>{selected.createdAt ? new Date(selected.createdAt).toLocaleDateString('en-GB', { dateStyle: 'medium' }) : '—'}</span>
                 </div>
-                {allowEdit && (
+                {(allowEdit || allowDelete) && (
                   <div className={styles.modalActions}>
-                    <button className={styles.editBtn} onClick={openEdit}><Pencil size={14} /> Edit Booking</button>
+                    {allowDelete && (
+                      <button className={styles.deleteActionBtn} onClick={handleDelete}><Trash2 size={14} /> Delete</button>
+                    )}
+                    {allowEdit && (
+                      <button className={styles.editBtn} onClick={openEdit}><Pencil size={14} /> Edit Booking</button>
+                    )}
                   </div>
                 )}
               </>

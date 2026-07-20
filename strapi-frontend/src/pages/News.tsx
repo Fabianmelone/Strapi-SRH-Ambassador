@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import { getNewsArticles, createNewsArticle, updateNewsArticle, deleteNewsArticle, strapiMediaUrl } from '../api/client'
 import { useAuth } from '../context/AuthContext'
-import { canViewDetail, canEdit, canDelete, canCreate } from '../permissions'
+import { canView, canEdit, canDelete, canCreate } from '../permissions'
 import Modal from '../components/Modal'
 import { Plus, X, Trash2, Newspaper, Tag, Calendar, Pencil } from 'lucide-react'
 import styles from './News.module.css'
@@ -24,7 +24,7 @@ export default function News() {
   const [savingEdit, setSavingEdit] = useState(false)
   const [editForm, setEditForm] = useState({ title: '', category: 'Blog', Content: '', uploaded_at: '' })
 
-  const canClick = canViewDetail('news', roleName)
+  const canClick = canView(capabilities, 'news')
 
   const [form, setForm] = useState({
     title: '',

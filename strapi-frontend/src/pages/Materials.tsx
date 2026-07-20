@@ -5,7 +5,7 @@ import {
   createMaterialCategory, deleteMaterial, updateMaterial,
 } from '../api/client'
 import { useAuth } from '../context/AuthContext'
-import { canViewDetail, canEdit, canDelete, canCreate } from '../permissions'
+import { canView, canEdit, canDelete, canCreate } from '../permissions'
 import Modal from '../components/Modal'
 import { Plus, X, Trash2, Package, Tag, Pencil } from 'lucide-react'
 import styles from './Materials.module.css'
@@ -19,7 +19,7 @@ export default function Materials() {
   const [categories, setCategories] = useState<any[]>([])
   const [selected, setSelected] = useState<any | null>(null)
   const [showForm, setShowForm] = useState(false)
-  const canClick = canViewDetail('materials', roleName)
+  const canClick = canView(capabilities, 'materials')
   const [showCatForm, setShowCatForm] = useState(false)
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)

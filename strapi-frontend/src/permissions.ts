@@ -1,14 +1,3 @@
-// Define which roles can open the detail modal for each section.
-// Role names must match exactly what's set in Strapi → Settings → Roles.
-// Add new roles here as you create them in Strapi.
-const sectionPermissions: Record<string, string[]> = {
-  bookings:  ['Authenticated', 'Ambassador', 'Admin'],
-  events:    ['Authenticated', 'Ambassador', 'Admin'],
-  news:      ['Authenticated', 'Ambassador', 'Admin'],
-  locations: ['Authenticated', 'Ambassador', 'Admin'],
-  materials: ['Authenticated', 'Ambassador', 'Admin'],
-}
-
 // Read-access probes. We hit each collection's `find` endpoint; Strapi returns
 // 403 when the current role has no read permission, which tells us to hide the
 // page and its nav entry. This mirrors the exact permissions set in Strapi
@@ -71,9 +60,9 @@ export function canDelete(caps: Capabilities, section: string): boolean {
   return caps[section]?.delete ?? false
 }
 
-export function canViewDetail(section: string, roleName: string | undefined): boolean {
-  // Treat undefined as 'Authenticated' — role may still be loading, and all
-  // logged-in users are at minimum Authenticated.
-  const role = roleName ?? 'Authenticated'
-  return sectionPermissions[section]?.includes(role) ?? false
+// Whether the detail modal can be opened. If you can read the list you can open
+// a row's detail, so this is driven by the live read-permission probe — which
+// works for any role the user creates in Strapi, without hardcoding role names.
+export function canView(caps: Capabilities, section: string): boolean {
+  return caps[section]?.read ?? false
 }

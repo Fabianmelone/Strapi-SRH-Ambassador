@@ -39,6 +39,9 @@ export const updateBooking = (id: string, data: Partial<{
   Booking_Status: string
 }>) => api.put(`/bookings/${id}?status=published`, { data })
 
+export const deleteBooking = (id: string) =>
+  api.delete(`/bookings/${id}`)
+
 // Events
 export const getEvents = () =>
   api.get('/events?populate[location]=true&populate[materials]=true&populate[Thumbnail]=true&populate[booking][populate][0]=location&sort=createdAt:desc&status=published')
@@ -66,6 +69,9 @@ export const updateEvent = (id: string, data: Partial<{
   booking: number
   materials: number[]
 }>) => api.put(`/events/${id}?status=published`, { data })
+
+export const deleteEvent = (id: string) =>
+  api.delete(`/events/${id}`)
 
 // News Articles
 export const getNewsArticles = () =>

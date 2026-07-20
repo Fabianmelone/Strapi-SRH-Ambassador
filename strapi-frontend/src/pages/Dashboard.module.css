@@ -3,14 +3,14 @@
 }
 
 .greeting h1 {
-  font-size: 26px;
+  font-size: 2rem;
   font-weight: 700;
-  margin-bottom: 4px;
+  margin-bottom: 6px;
 }
 
 .greeting p {
   color: var(--gray-600);
-  font-size: 14px;
+  font-size: 18px;
 }
 
 .statGrid {
@@ -33,7 +33,7 @@
 }
 
 .statCard:hover {
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--glow-orange);
 }
 
 .statIcon {

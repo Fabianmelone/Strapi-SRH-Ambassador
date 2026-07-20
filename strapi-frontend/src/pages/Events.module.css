@@ -5,8 +5,8 @@
   margin-bottom: 24px;
 }
 
-.pageHeader h1 { font-size: 24px; font-weight: 700; margin-bottom: 2px; }
-.pageHeader p { color: var(--gray-600); font-size: 14px; }
+.pageHeader h1 { font-size: 2rem; font-weight: 700; margin-bottom: 4px; }
+.pageHeader p { color: var(--gray-600); font-size: 18px; }
 
 .primaryBtn {
   display: flex;
@@ -181,13 +181,13 @@
 }
 
 .eventName {
-  font-size: 16px;
+  font-size: 30px;
   font-weight: 700;
   color: var(--black);
 }
 
 .eventDesc {
-  font-size: 13px;
+  font-size: 16px;
   color: var(--gray-600);
   line-height: 1.5;
 }
@@ -207,8 +207,8 @@
   gap: 5px;
 }
 
-.clickable { cursor: pointer; }
-.clickable:hover { box-shadow: var(--shadow-md); }
+.clickable { cursor: pointer; transition: box-shadow 0.15s; }
+.clickable:hover { box-shadow: var(--glow-orange); }
 
 .detailBadges { display: flex; gap: 8px; flex-wrap: wrap; }
 .detailDesc { font-size: 14px; color: var(--gray-600); line-height: 1.6; }
@@ -245,7 +245,7 @@
   font-size: 12px; font-weight: 600; padding: 3px 9px; border-radius: 20px;
 }
 
-.modalActions { display: flex; justify-content: flex-end; padding-top: 8px; }
+.modalActions { display: flex; justify-content: flex-end; gap: 10px; padding-top: 8px; }
 .editBtn {
   display: flex; align-items: center; gap: 6px;
   background: var(--orange); color: white; font-weight: 600;
@@ -253,6 +253,13 @@
   transition: background 0.12s;
 }
 .editBtn:hover { background: var(--orange-dark); }
+.deleteActionBtn {
+  display: flex; align-items: center; gap: 6px;
+  background: #fee2e2; color: #dc2626; font-weight: 600;
+  padding: 9px 16px; border-radius: var(--radius); font-size: 14px;
+  transition: background 0.12s;
+}
+.deleteActionBtn:hover { background: #fecaca; }
 
 .bookingTag {
   display: inline-flex; align-items: center; gap: 5px;

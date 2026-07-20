@@ -5,8 +5,8 @@
   margin-bottom: 24px;
 }
 
-.pageHeader h1 { font-size: 24px; font-weight: 700; margin-bottom: 2px; }
-.pageHeader p { color: var(--gray-600); font-size: 14px; }
+.pageHeader h1 { font-size: 2rem; font-weight: 700; margin-bottom: 4px; }
+.pageHeader p { color: var(--gray-600); font-size: 18px; }
 
 .headerActions { display: flex; gap: 10px; align-items: center; }
 
@@ -230,8 +230,8 @@
 .deleteBtn:hover:not(:disabled) { background: #fee2e2; color: #dc2626; }
 .deleteBtn:disabled { opacity: 0.4; }
 
-.clickable { cursor: pointer; }
-.clickable:hover { background: var(--gray-100); }
+.clickable { cursor: pointer; transition: background 0.15s; }
+.clickable:hover { background: var(--orange-light); }
 
 .detailRow {
   display: flex; flex-direction: column; gap: 4px;

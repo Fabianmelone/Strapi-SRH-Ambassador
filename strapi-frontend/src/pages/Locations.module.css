@@ -5,8 +5,8 @@
   margin-bottom: 24px;
 }
 
-.pageHeader h1 { font-size: 24px; font-weight: 700; margin-bottom: 2px; }
-.pageHeader p { color: var(--gray-600); font-size: 14px; }
+.pageHeader h1 { font-size: 2rem; font-weight: 700; margin-bottom: 4px; }
+.pageHeader p { color: var(--gray-600); font-size: 18px; }
 
 .primaryBtn {
   display: flex;
@@ -178,7 +178,7 @@
 }
 
 .locName {
-  font-size: 16px;
+  font-size: 30px;
   font-weight: 700;
   margin-bottom: 2px;
 }
@@ -239,8 +239,8 @@
 .deleteBtn:hover:not(:disabled) { background: #fee2e2; color: #dc2626; }
 .deleteBtn:disabled { opacity: 0.4; cursor: not-allowed; }
 
-.clickable { cursor: pointer; }
-.clickable:hover { box-shadow: var(--shadow-md); }
+.clickable { cursor: pointer; transition: box-shadow 0.15s; }
+.clickable:hover { box-shadow: var(--glow-orange); }
 
 .detailImage {
   width: 100%;
