@@ -1,14 +1,15 @@
 import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
-import { getNewsArticles, createNewsArticle, updateNewsArticle, deleteNewsArticle, strapiMediaUrl } from '../api/client'
+import { getNewsArticles, createNewsArticle, updateNewsArticle, deleteNewsArticle, strapiMediaUrl, uploadMedia } from '../api/client'
 import { useAuth } from '../context/AuthContext'
 import { canView, canEdit, canDelete, canCreate } from '../permissions'
 import Modal from '../components/Modal'
+import ImageUpload from '../components/ImageUpload'
 import { Plus, X, Trash2, Newspaper, Tag, Calendar, Pencil } from 'lucide-react'
 import styles from './News.module.css'
 
 export default function News() {
-  const { roleName, capabilities } = useAuth()
+  const { capabilities } = useAuth()
   const allowEdit = canEdit(capabilities, 'news')
   const allowDelete = canDelete(capabilities, 'news')
   const allowCreate = canCreate(capabilities, 'news')
@@ -23,6 +24,9 @@ export default function News() {
   const [editing, setEditing] = useState(false)
   const [savingEdit, setSavingEdit] = useState(false)
   const [editForm, setEditForm] = useState({ title: '', category: 'Blog', Content: '', uploaded_at: '' })
+  const [thumbFile, setThumbFile] = useState<File | null>(null)
+  const [editThumbFile, setEditThumbFile] = useState<File | null>(null)
+  const [editThumbCleared, setEditThumbCleared] = useState(false)
 
   const canClick = canView(capabilities, 'news')
 
@@ -50,15 +54,18 @@ export default function News() {
       const blocksContent = [
         { type: 'paragraph', children: [{ type: 'text', text: form.Content }] },
       ]
+      const thumbnail = thumbFile ? await uploadMedia(thumbFile) : undefined
       await createNewsArticle({
         title: form.title,
         category: form.category,
         Content: blocksContent,
         uploaded_at: form.uploaded_at,
+        thumbnail,
       })
       await fetchArticles()
       setShowForm(false)
       setForm({ title: '', category: 'Blog', Content: '', uploaded_at: new Date().toISOString().split('T')[0] })
+      setThumbFile(null)
     } catch (err: any) {
       setError(err?.response?.data?.error?.message || 'Failed to create article.')
     } finally {
@@ -93,6 +100,8 @@ export default function News() {
       Content: fullText(selected.Content),
       uploaded_at: selected.uploaded_at || new Date().toISOString().split('T')[0],
     })
+    setEditThumbFile(null)
+    setEditThumbCleared(false)
     setEditing(true)
   }
 
@@ -105,11 +114,17 @@ export default function News() {
       const blocksContent = editForm.Content.split('\n\n').map(p => ({
         type: 'paragraph', children: [{ type: 'text', text: p }],
       }))
+      const thumbnail = editThumbFile ? await uploadMedia(editThumbFile) : undefined
+      // New upload wins; otherwise if the user cleared it, detach with null.
+      const thumbnailField = thumbnail != null
+        ? { thumbnail }
+        : editThumbCleared ? { thumbnail: null as unknown as number } : {}
       await updateNewsArticle(selected.documentId, {
         title: editForm.title,
         category: editForm.category,
         Content: blocksContent,
         uploaded_at: editForm.uploaded_at,
+        ...thumbnailField,
       })
       await fetchArticles()
       const res = await getNewsArticles()
@@ -189,6 +204,7 @@ export default function News() {
               <label>Content</label>
               <textarea rows={8} value={form.Content} onChange={e => setForm(f => ({ ...f, Content: e.target.value }))} required placeholder="Write your article content here…" />
             </div>
+            <ImageUpload label="Cover image" file={thumbFile} onChange={setThumbFile} />
             <div className={styles.formActions}>
               <button type="button" className={styles.cancelBtn} onClick={() => setShowForm(false)}>Cancel</button>
               <button type="submit" className={styles.primaryBtn} disabled={submitting}>
@@ -276,6 +292,13 @@ export default function News() {
                 <label>Content</label>
                 <textarea rows={8} value={editForm.Content} onChange={e => setEditForm(f => ({ ...f, Content: e.target.value }))} required />
               </div>
+              <ImageUpload
+                label="Cover image"
+                file={editThumbFile}
+                onChange={f => { setEditThumbFile(f); if (f) setEditThumbCleared(false) }}
+                existingUrl={editThumbCleared ? null : thumbUrl(selected)}
+                onClear={() => setEditThumbCleared(true)}
+              />
               <div className={styles.formActions}>
                 <button type="button" className={styles.cancelBtn} onClick={() => setEditing(false)}>Cancel</button>
                 <button type="submit" className={styles.primaryBtn} disabled={savingEdit}>

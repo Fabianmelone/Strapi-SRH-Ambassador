@@ -178,13 +178,13 @@
 }
 
 .locName {
-  font-size: 30px;
+  font-size: 1.75rem;
   font-weight: 700;
   margin-bottom: 2px;
 }
 
 .locType {
-  font-size: 12px;
+  font-size: 1rem;
   color: var(--gray-400);
 }
 
@@ -214,7 +214,7 @@
 }
 
 .capacity {
-  font-size: 12px;
+  font-size: .75rem;
   color: var(--gray-400);
 }
 
@@ -255,6 +255,21 @@
   max-height: 280px;
   object-fit: cover;
   display: block;
+}
+
+.gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 8px;
+}
+
+.gallery img {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border-radius: var(--radius);
+  display: block;
+  background: var(--gray-100);
 }
 
 .detailRow {

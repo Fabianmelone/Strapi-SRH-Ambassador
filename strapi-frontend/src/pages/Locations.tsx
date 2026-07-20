@@ -2,16 +2,18 @@ import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import {
   getAllLocations, createLocation, updateLocation,
-  deleteLocation, createAddress, updateAddress, strapiMediaUrl,
+  deleteLocation, createAddress, updateAddress, strapiMediaUrl, uploadMedia,
 } from '../api/client'
 import { useAuth } from '../context/AuthContext'
 import { canView, canEdit, canDelete, canCreate } from '../permissions'
 import Modal from '../components/Modal'
+import MultiImageUpload from '../components/MultiImageUpload'
+import type { ExistingImage } from '../components/MultiImageUpload'
 import { Plus, X, Trash2, Building2, CheckCircle2, XCircle, Pencil } from 'lucide-react'
 import styles from './Locations.module.css'
 
 export default function Locations() {
-  const { roleName, capabilities } = useAuth()
+  const { capabilities } = useAuth()
   const allowEdit = canEdit(capabilities, 'locations')
   const allowDelete = canDelete(capabilities, 'locations')
   const allowCreate = canCreate(capabilities, 'locations')
@@ -26,6 +28,9 @@ export default function Locations() {
   const [togglingId, setTogglingId] = useState<number | null>(null)
   const [editing, setEditing] = useState(false)
   const [savingEdit, setSavingEdit] = useState(false)
+  const [imageFiles, setImageFiles] = useState<File[]>([])
+  const [editImageFiles, setEditImageFiles] = useState<File[]>([])
+  const [editKeptImages, setEditKeptImages] = useState<ExistingImage[]>([])
   const [editForm, setEditForm] = useState({
     Name: '', type: 'SRH Building', min_capacity: '', max_capacity: '',
     is_available: true,
@@ -52,12 +57,14 @@ export default function Locations() {
     setError('')
     setSubmitting(true)
     try {
+      const imageIds = await Promise.all(imageFiles.map(f => uploadMedia(f)))
       const locRes = await createLocation({
         Name: form.Name,
         type: form.type,
         min_capacity: form.min_capacity ? Number(form.min_capacity) : undefined,
         max_capacity: form.max_capacity ? Number(form.max_capacity) : undefined,
         is_available: form.is_available,
+        location_image: imageIds.length ? imageIds : undefined,
       })
 
       if (form.street_name && form.City && form.Country) {
@@ -73,6 +80,7 @@ export default function Locations() {
 
       await fetchLocations()
       setShowForm(false)
+      setImageFiles([])
       setForm({
         Name: '', type: 'SRH Building', min_capacity: '', max_capacity: '',
         is_available: true, street_name: '', building_number: '',
@@ -89,6 +97,15 @@ export default function Locations() {
     const img = Array.isArray(loc?.location_image) ? loc.location_image[0] : loc?.location_image
     const url = (small && img?.formats?.thumbnail?.url) || img?.url
     return url ? strapiMediaUrl(url) : null
+  }
+
+  // All images of a location, as {id, url} for the gallery editor.
+  const locationImages = (loc: any): ExistingImage[] => {
+    const arr = Array.isArray(loc?.location_image) ? loc.location_image : (loc?.location_image ? [loc.location_image] : [])
+    return arr.map((img: any) => ({
+      id: img.id,
+      url: strapiMediaUrl(img.url),
+    }))
   }
 
   const handleToggleAvailability = async (loc: any) => {
@@ -116,6 +133,8 @@ export default function Locations() {
       City: addr?.City || '',
       Country: addr?.Country || '',
     })
+    setEditImageFiles([])
+    setEditKeptImages(locationImages(selected))
     setEditing(true)
   }
 
@@ -125,12 +144,17 @@ export default function Locations() {
     setSavingEdit(true)
     setError('')
     try {
+      const newIds = await Promise.all(editImageFiles.map(f => uploadMedia(f)))
+      // Kept existing images + newly uploaded ones. Removing images here detaches
+      // them; an empty array clears all images from the location.
+      const finalIds = [...editKeptImages.map(img => img.id), ...newIds]
       await updateLocation(selected.documentId, {
         Name: editForm.Name,
         type: editForm.type,
         min_capacity: editForm.min_capacity ? Number(editForm.min_capacity) : undefined,
         max_capacity: editForm.max_capacity ? Number(editForm.max_capacity) : undefined,
         is_available: editForm.is_available,
+        location_image: finalIds,
       })
 
       const hasAddress = editForm.street_name && editForm.City && editForm.Country
@@ -249,6 +273,8 @@ export default function Locations() {
               />
               <label htmlFor="is_available">Available for booking</label>
             </div>
+
+            <MultiImageUpload label="Location images" files={imageFiles} onFilesChange={setImageFiles} />
 
             <div className={styles.sectionLabel} style={{ marginTop: 8 }}>
               Address <span className={styles.optional}>(optional)</span>
@@ -415,6 +441,13 @@ export default function Locations() {
                 <input type="checkbox" id="edit_is_available" checked={editForm.is_available} onChange={e => setEditForm(f => ({ ...f, is_available: e.target.checked }))} />
                 <label htmlFor="edit_is_available">Available for booking</label>
               </div>
+              <MultiImageUpload
+                label="Location images"
+                files={editImageFiles}
+                onFilesChange={setEditImageFiles}
+                existing={editKeptImages}
+                onExistingChange={setEditKeptImages}
+              />
               <div className={styles.sectionLabel} style={{ marginTop: 8 }}>
                 Address <span className={styles.optional}>(optional)</span>
               </div>
@@ -451,9 +484,11 @@ export default function Locations() {
             </form>
           ) : (
             <>
-              {imageUrl(selected) && (
-                <div className={styles.detailImage}>
-                  <img src={imageUrl(selected)!} alt={selected.Name} />
+              {locationImages(selected).length > 0 && (
+                <div className={styles.gallery}>
+                  {locationImages(selected).map(img => (
+                    <img key={img.id} src={img.url} alt={selected.Name} />
+                  ))}
                 </div>
               )}
               <div className={styles.detailRow}>

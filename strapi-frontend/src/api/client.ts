@@ -15,6 +15,14 @@ api.interceptors.request.use((config) => {
 export const strapiMediaUrl = (url: string) =>
   url?.startsWith('http') ? url : `${BASE_URL}${url}`
 
+// Media upload — posts to Strapi's upload plugin and returns the new file id.
+export const uploadMedia = async (file: File): Promise<number> => {
+  const fd = new FormData()
+  fd.append('files', file)
+  const res = await api.post('/upload', fd)
+  return res.data[0].id
+}
+
 // Auth
 export const login = (identifier: string, password: string) =>
   api.post('/auth/local', { identifier, password })
@@ -56,6 +64,7 @@ export const createEvent = (data: {
   location: number
   booking: number
   materials?: number[]
+  Thumbnail?: number
 }) => api.post('/events?status=published', { data })
 
 export const updateEvent = (id: string, data: Partial<{
@@ -68,6 +77,7 @@ export const updateEvent = (id: string, data: Partial<{
   location: number
   booking: number
   materials: number[]
+  Thumbnail: number
 }>) => api.put(`/events/${id}?status=published`, { data })
 
 export const deleteEvent = (id: string) =>
@@ -82,6 +92,7 @@ export const createNewsArticle = (data: {
   category: string
   Content: unknown
   uploaded_at: string
+  thumbnail?: number
 }) => api.post('/news-articles?status=published', { data })
 
 export const updateNewsArticle = (id: string, data: Partial<{
@@ -89,6 +100,7 @@ export const updateNewsArticle = (id: string, data: Partial<{
   category: string
   Content: unknown
   uploaded_at: string
+  thumbnail: number
 }>) => api.put(`/news-articles/${id}?status=published`, { data })
 
 export const deleteNewsArticle = (id: string) =>
@@ -150,6 +162,7 @@ export const createLocation = (data: {
   min_capacity?: number
   max_capacity?: number
   is_available: boolean
+  location_image?: number[]
 }) => api.post('/locations?status=published', { data })
 
 export const updateLocation = (id: string, data: Partial<{
@@ -159,6 +172,7 @@ export const updateLocation = (id: string, data: Partial<{
   max_capacity: number
   is_available: boolean
   address: number
+  location_image: number[]
 }>) => api.put(`/locations/${id}?status=published`, { data })
 
 export const deleteLocation = (id: string) =>

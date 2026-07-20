@@ -181,13 +181,13 @@
 }
 
 .eventName {
-  font-size: 30px;
+  font-size: 1.75rem;
   font-weight: 700;
   color: var(--black);
 }
 
 .eventDesc {
-  font-size: 16px;
+  font-size: 1rem;
   color: var(--gray-600);
   line-height: 1.5;
 }
@@ -196,7 +196,7 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
-  font-size: 12px;
+  font-size: .75rem;
   color: var(--gray-400);
   margin-top: auto;
 }

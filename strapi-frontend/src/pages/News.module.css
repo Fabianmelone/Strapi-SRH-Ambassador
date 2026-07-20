@@ -133,8 +133,8 @@
 .articleCard:hover { box-shadow: var(--shadow-md); }
 
 .thumb {
-  width: 96px;
-  height: 96px;
+  width: 30%;
+  height: auto;
   flex-shrink: 0;
   border-radius: 8px;
   overflow: hidden;
@@ -181,7 +181,7 @@
 }
 
 .articleTitle {
-  font-size: 30px;
+  font-size: 1.75rem;
   font-weight: 700;
   color: var(--black);
   margin-bottom: 6px;
@@ -191,7 +191,7 @@
 }
 
 .articleExcerpt {
-  font-size: 16px;
+  font-size: 1rem;
   color: var(--gray-600);
   line-height: 1.5;
   margin-bottom: 8px;

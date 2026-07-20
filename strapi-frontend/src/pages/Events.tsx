@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
-import { getEvents, createEvent, updateEvent, deleteEvent, getBookings, getMaterials, strapiMediaUrl } from '../api/client'
+import { getEvents, createEvent, updateEvent, deleteEvent, getBookings, getMaterials, strapiMediaUrl, uploadMedia } from '../api/client'
 import { useAuth } from '../context/AuthContext'
 import { canView, canEdit, canDelete, canCreate } from '../permissions'
 import Modal from '../components/Modal'
+import ImageUpload from '../components/ImageUpload'
 import { Plus, X, MapPin, Users, Wifi, Package, Pencil, CalendarCheck, Trash2 } from 'lucide-react'
 import styles from './Events.module.css'
 
@@ -22,6 +23,9 @@ export default function Events() {
   const [error, setError] = useState('')
   const [editing, setEditing] = useState(false)
   const [savingEdit, setSavingEdit] = useState(false)
+  const [imageFile, setImageFile] = useState<File | null>(null)
+  const [editImageFile, setEditImageFile] = useState<File | null>(null)
+  const [editImageCleared, setEditImageCleared] = useState(false)
 
   const canClick = canView(capabilities, 'events')
 
@@ -99,6 +103,7 @@ export default function Events() {
     }
     setSubmitting(true)
     try {
+      const thumbnail = imageFile ? await uploadMedia(imageFile) : undefined
       await createEvent({
         Name: form.Name, Access: form.Access as 'Public' | 'Private',
         Capacity: Number(form.Capacity), Is_online: form.Is_online,
@@ -107,10 +112,12 @@ export default function Events() {
         booking: bk.id,
         location: bk.location?.id,
         materials: form.materials,
+        Thumbnail: thumbnail,
       })
       await load()
       setShowForm(false)
       setForm(emptyForm)
+      setImageFile(null)
     } catch (err: any) {
       setError(err?.response?.data?.error?.message || 'Failed to create event.')
     } finally {
@@ -131,6 +138,8 @@ export default function Events() {
       location: selected.location?.id ? String(selected.location.id) : '',
       materials: Array.isArray(selected.materials) ? selected.materials.map((m: any) => m.id) : [],
     })
+    setEditImageFile(null)
+    setEditImageCleared(false)
     setEditing(true)
   }
 
@@ -148,6 +157,10 @@ export default function Events() {
     setError('')
     try {
       const bk = editBookingOptions().find((b: any) => String(b.id) === editForm.booking)
+      const thumbnail = editImageFile ? await uploadMedia(editImageFile) : undefined
+      const thumbnailField = thumbnail != null
+        ? { Thumbnail: thumbnail }
+        : editImageCleared ? { Thumbnail: null as unknown as number } : {}
       await updateEvent(selected.documentId, {
         Name: editForm.Name, Access: editForm.Access,
         Capacity: Number(editForm.Capacity), Is_online: editForm.Is_online,
@@ -156,6 +169,7 @@ export default function Events() {
         booking: bk ? bk.id : undefined,
         location: bk?.location?.id ?? (editForm.location ? Number(editForm.location) : undefined),
         materials: editForm.materials,
+        ...thumbnailField,
       })
       const res = await getEvents()
       setEvents(res.data.data)
@@ -242,6 +256,7 @@ export default function Events() {
               <label>Description</label>
               <textarea rows={3} value={form.Description} onChange={e => setForm(f => ({ ...f, Description: e.target.value }))} placeholder="What is this event about?" />
             </div>
+            <ImageUpload label="Event image" file={imageFile} onChange={setImageFile} />
             <div className={styles.field}>
               <label>Materials</label>
               {materials.length === 0 ? (
@@ -347,6 +362,13 @@ export default function Events() {
                 <label>Description</label>
                 <textarea rows={3} value={editForm.Description} onChange={e => setEditForm(f => ({ ...f, Description: e.target.value }))} />
               </div>
+              <ImageUpload
+                label="Event image"
+                file={editImageFile}
+                onChange={f => { setEditImageFile(f); if (f) setEditImageCleared(false) }}
+                existingUrl={editImageCleared ? null : eventImage(selected)}
+                onClear={() => setEditImageCleared(true)}
+              />
               <div className={styles.field}>
                 <label>Materials</label>
                 {materials.length === 0 ? (
