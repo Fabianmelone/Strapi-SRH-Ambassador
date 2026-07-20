@@ -5,13 +5,16 @@ import {
   deleteLocation, createAddress, updateAddress, strapiMediaUrl,
 } from '../api/client'
 import { useAuth } from '../context/AuthContext'
-import { canViewDetail } from '../permissions'
+import { canViewDetail, canEdit, canDelete, canCreate } from '../permissions'
 import Modal from '../components/Modal'
 import { Plus, X, Trash2, Building2, CheckCircle2, XCircle, Pencil } from 'lucide-react'
 import styles from './Locations.module.css'
 
 export default function Locations() {
-  const { roleName } = useAuth()
+  const { roleName, capabilities } = useAuth()
+  const allowEdit = canEdit(capabilities, 'locations')
+  const allowDelete = canDelete(capabilities, 'locations')
+  const allowCreate = canCreate(capabilities, 'locations')
   const [locations, setLocations] = useState<any[]>([])
   const [selected, setSelected] = useState<any | null>(null)
   const [loading, setLoading] = useState(true)
@@ -178,9 +181,11 @@ export default function Locations() {
           <h1>Locations</h1>
           <p>Manage bookable spaces and their addresses</p>
         </div>
-        <button className={styles.primaryBtn} onClick={() => setShowForm(true)}>
-          <Plus size={16} /> New Location
-        </button>
+        {allowCreate && (
+          <button className={styles.primaryBtn} onClick={() => setShowForm(true)}>
+            <Plus size={16} /> New Location
+          </button>
+        )}
       </div>
 
       {error && !showForm && <div className={styles.error}>{error}</div>}
@@ -330,15 +335,22 @@ export default function Locations() {
                     <div className={styles.locName}>{loc.Name}</div>
                     <div className={styles.locType}>{loc.type}</div>
                   </div>
-                  <button
-                    className={`${styles.availBadge} ${available ? styles.availTrue : styles.availFalse}`}
-                    onClick={() => handleToggleAvailability(loc)}
-                    disabled={togglingId === loc.id}
-                    title="Toggle availability"
-                  >
-                    {available ? <CheckCircle2 size={14} /> : <XCircle size={14} />}
-                    {available ? 'Available' : 'Unavailable'}
-                  </button>
+                  {allowEdit ? (
+                    <button
+                      className={`${styles.availBadge} ${available ? styles.availTrue : styles.availFalse}`}
+                      onClick={e => { e.stopPropagation(); handleToggleAvailability(loc) }}
+                      disabled={togglingId === loc.id}
+                      title="Toggle availability"
+                    >
+                      {available ? <CheckCircle2 size={14} /> : <XCircle size={14} />}
+                      {available ? 'Available' : 'Unavailable'}
+                    </button>
+                  ) : (
+                    <span className={`${styles.availBadge} ${available ? styles.availTrue : styles.availFalse}`}>
+                      {available ? <CheckCircle2 size={14} /> : <XCircle size={14} />}
+                      {available ? 'Available' : 'Unavailable'}
+                    </span>
+                  )}
                 </div>
 
                 {addr && (
@@ -353,15 +365,17 @@ export default function Locations() {
                   </div>
                 )}
 
-                <div className={styles.cardActions}>
-                  <button
-                    className={styles.deleteBtn}
-                    onClick={() => handleDelete(loc.id, loc.documentId)}
-                    disabled={deletingId === loc.id}
-                  >
-                    <Trash2 size={14} /> Delete
-                  </button>
-                </div>
+                {allowDelete && (
+                  <div className={styles.cardActions}>
+                    <button
+                      className={styles.deleteBtn}
+                      onClick={e => { e.stopPropagation(); handleDelete(loc.id, loc.documentId) }}
+                      disabled={deletingId === loc.id}
+                    >
+                      <Trash2 size={14} /> Delete
+                    </button>
+                  </div>
+                )}
               </div>
             )
           })}
@@ -469,9 +483,11 @@ export default function Locations() {
                   <span>{selected.min_capacity ?? '—'} – {selected.max_capacity ?? '—'} people</span>
                 </div>
               )}
-              <div className={styles.modalActions}>
-                <button className={styles.editBtn} onClick={openEdit}><Pencil size={14} /> Edit Location</button>
-              </div>
+              {allowEdit && (
+                <div className={styles.modalActions}>
+                  <button className={styles.editBtn} onClick={openEdit}><Pencil size={14} /> Edit Location</button>
+                </div>
+              )}
             </>
           )}
         </Modal>

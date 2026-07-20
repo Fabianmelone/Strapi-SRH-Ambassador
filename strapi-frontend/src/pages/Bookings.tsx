@@ -2,13 +2,15 @@ import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import { getBookings, getLocations, createBooking, updateBooking } from '../api/client'
 import { useAuth } from '../context/AuthContext'
-import { canViewDetail } from '../permissions'
+import { canViewDetail, canEdit, canCreate } from '../permissions'
 import Modal from '../components/Modal'
 import { Plus, X, MapPin, Calendar, Pencil } from 'lucide-react'
 import styles from './Bookings.module.css'
 
 export default function Bookings() {
-  const { roleName } = useAuth()
+  const { roleName, capabilities } = useAuth()
+  const allowEdit = canEdit(capabilities, 'bookings')
+  const allowCreate = canCreate(capabilities, 'bookings')
   const [bookings, setBookings] = useState<any[]>([])
   const [locations, setLocations] = useState<any[]>([])
   const [selected, setSelected] = useState<any | null>(null)
@@ -102,9 +104,11 @@ export default function Bookings() {
           <h1>Bookings</h1>
           <p>Manage location reservations</p>
         </div>
-        <button className={styles.primaryBtn} onClick={() => setShowForm(true)}>
-          <Plus size={16} /> New Booking
-        </button>
+        {allowCreate && (
+          <button className={styles.primaryBtn} onClick={() => setShowForm(true)}>
+            <Plus size={16} /> New Booking
+          </button>
+        )}
       </div>
 
       {!showForm && error && <div className={styles.error}>{error}</div>}
@@ -241,9 +245,11 @@ export default function Bookings() {
                   <span className={styles.detailLabel}>Created</span>
                   <span>{selected.createdAt ? new Date(selected.createdAt).toLocaleDateString('en-GB', { dateStyle: 'medium' }) : '—'}</span>
                 </div>
-                <div className={styles.modalActions}>
-                  <button className={styles.editBtn} onClick={openEdit}><Pencil size={14} /> Edit Booking</button>
-                </div>
+                {allowEdit && (
+                  <div className={styles.modalActions}>
+                    <button className={styles.editBtn} onClick={openEdit}><Pencil size={14} /> Edit Booking</button>
+                  </div>
+                )}
               </>
             )}
           </Modal>

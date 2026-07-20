@@ -1,8 +1,8 @@
 import { createContext, useContext, useState, useEffect } from 'react'
 import type { ReactNode } from 'react'
 import { login as apiLogin, api } from '../api/client'
-import { SECTION_PROBES } from '../permissions'
-import type { SectionAccess } from '../permissions'
+import { SECTION_PROBES, SECTION_ENDPOINTS, PROBE_DOC_ID, SECTION_CREATE_PROBE } from '../permissions'
+import type { SectionAccess, Capabilities, SectionCaps } from '../permissions'
 
 interface User {
   id: number
@@ -16,6 +16,7 @@ interface AuthContextType {
   token: string | null
   roleName: string | undefined
   access: SectionAccess
+  capabilities: Capabilities
   accessLoading: boolean
   login: (identifier: string, password: string) => Promise<void>
   logout: () => void
@@ -35,22 +36,39 @@ async function fetchRole(jwt: string): Promise<string | undefined> {
   }
 }
 
-// Probe each section's read endpoint. 403/401 => the role can't read it, so we
-// hide the page. Any other failure (backend down, 500) is treated as accessible
-// so a transient outage doesn't wipe the whole navigation.
-async function probeAccess(jwt: string): Promise<SectionAccess> {
+// A request is "allowed" unless Strapi actively forbids it (403/401). Any other
+// result — success, 404 (not found), 400 (validation) — means the permission
+// policy let it through. Network/500 errors are treated as allowed so a
+// transient outage doesn't wipe the UI.
+function allowedFrom(promise: Promise<unknown>): Promise<boolean> {
+  return promise.then(() => true).catch((err: any) => {
+    const status = err?.response?.status
+    return status !== 403 && status !== 401
+  })
+}
+
+// Probe read/update/delete permission for every section in parallel. Read hits
+// the list endpoint; update/delete hit a non-existent documentId so the check
+// is non-destructive (see PROBE_DOC_ID note in permissions.ts).
+async function probeCapabilities(jwt: string): Promise<Capabilities> {
+  const headers = { Authorization: `Bearer ${jwt}` }
   const entries = await Promise.all(
-    Object.entries(SECTION_PROBES).map(async ([section, url]) => {
-      try {
-        await api.get(url, { headers: { Authorization: `Bearer ${jwt}` } })
-        return [section, true] as const
-      } catch (err: any) {
-        const status = err?.response?.status
-        return [section, status !== 403 && status !== 401] as const
-      }
+    Object.keys(SECTION_ENDPOINTS).map(async (section): Promise<[string, SectionCaps]> => {
+      const ep = SECTION_ENDPOINTS[section]
+      const [read, create, update, del] = await Promise.all([
+        allowedFrom(api.get(SECTION_PROBES[section], { headers })),
+        allowedFrom(api.post(`/${ep}`, { data: SECTION_CREATE_PROBE[section] }, { headers })),
+        allowedFrom(api.put(`/${ep}/${PROBE_DOC_ID}`, { data: {} }, { headers })),
+        allowedFrom(api.delete(`/${ep}/${PROBE_DOC_ID}`, { headers })),
+      ])
+      return [section, { read, create, update, delete: del }]
     })
   )
   return Object.fromEntries(entries)
+}
+
+function readMap(caps: Capabilities): SectionAccess {
+  return Object.fromEntries(Object.entries(caps).map(([s, c]) => [s, c.read]))
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -58,8 +76,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [token, setToken] = useState<string | null>(null)
   const [roleName, setRoleName] = useState<string | undefined>(undefined)
   const [access, setAccess] = useState<SectionAccess>({})
+  const [capabilities, setCapabilities] = useState<Capabilities>({})
   const [accessLoading, setAccessLoading] = useState(true)
   const [loading, setLoading] = useState(true)
+
+  const applyCaps = (caps: Capabilities) => {
+    setCapabilities(caps)
+    setAccess(readMap(caps))
+  }
 
   useEffect(() => {
     const storedToken = localStorage.getItem('token')
@@ -73,8 +97,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       fetchRole(storedToken).then(r => {
         if (r) { setRoleName(r); localStorage.setItem('role', r) }
       })
-      probeAccess(storedToken)
-        .then(setAccess)
+      probeCapabilities(storedToken)
+        .then(applyCaps)
         .finally(() => setAccessLoading(false))
     } else {
       setAccessLoading(false)
@@ -87,12 +111,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { jwt, user } = res.data
     localStorage.setItem('token', jwt)
     localStorage.setItem('user', JSON.stringify(user))
-    const [role, sectionAccess] = await Promise.all([fetchRole(jwt), probeAccess(jwt)])
+    const [role, caps] = await Promise.all([fetchRole(jwt), probeCapabilities(jwt)])
     if (role) localStorage.setItem('role', role)
     setToken(jwt)
     setUser(user)
     setRoleName(role)
-    setAccess(sectionAccess)
+    applyCaps(caps)
     setAccessLoading(false)
   }
 
@@ -104,11 +128,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null)
     setRoleName(undefined)
     setAccess({})
+    setCapabilities({})
     setAccessLoading(true)
   }
 
   return (
-    <AuthContext.Provider value={{ user, token, roleName, access, accessLoading, login, logout, loading }}>
+    <AuthContext.Provider value={{ user, token, roleName, access, capabilities, accessLoading, login, logout, loading }}>
       {children}
     </AuthContext.Provider>
   )

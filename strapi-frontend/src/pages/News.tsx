@@ -2,13 +2,16 @@ import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import { getNewsArticles, createNewsArticle, updateNewsArticle, deleteNewsArticle, strapiMediaUrl } from '../api/client'
 import { useAuth } from '../context/AuthContext'
-import { canViewDetail } from '../permissions'
+import { canViewDetail, canEdit, canDelete, canCreate } from '../permissions'
 import Modal from '../components/Modal'
 import { Plus, X, Trash2, Newspaper, Tag, Calendar, Pencil } from 'lucide-react'
 import styles from './News.module.css'
 
 export default function News() {
-  const { roleName } = useAuth()
+  const { roleName, capabilities } = useAuth()
+  const allowEdit = canEdit(capabilities, 'news')
+  const allowDelete = canDelete(capabilities, 'news')
+  const allowCreate = canCreate(capabilities, 'news')
   const [articles, setArticles] = useState<any[]>([])
   const [selected, setSelected] = useState<any | null>(null)
   const [showForm, setShowForm] = useState(false)
@@ -147,9 +150,11 @@ export default function News() {
           <h1>News Articles</h1>
           <p>Publish and manage news content</p>
         </div>
-        <button className={styles.primaryBtn} onClick={() => setShowForm(true)}>
-          <Plus size={16} /> New Article
-        </button>
+        {allowCreate && (
+          <button className={styles.primaryBtn} onClick={() => setShowForm(true)}>
+            <Plus size={16} /> New Article
+          </button>
+        )}
       </div>
 
       {fetchError && <div className={styles.error}>{fetchError}</div>}
@@ -235,14 +240,16 @@ export default function News() {
                   {text && <p className={styles.articleExcerpt}>{text}{text.length >= 140 ? '…' : ''}</p>}
                   {a.author?.username && <div className={styles.author}>By {a.author.username}</div>}
                 </div>
-                <button
-                  className={styles.deleteBtn}
-                  onClick={e => { e.stopPropagation(); handleDelete(a.id, a.documentId) }}
-                  disabled={deletingId === a.id}
-                  title="Delete article"
-                >
-                  <Trash2 size={15} />
-                </button>
+                {allowDelete && (
+                  <button
+                    className={styles.deleteBtn}
+                    onClick={e => { e.stopPropagation(); handleDelete(a.id, a.documentId) }}
+                    disabled={deletingId === a.id}
+                    title="Delete article"
+                  >
+                    <Trash2 size={15} />
+                  </button>
+                )}
               </div>
             )
           })}
@@ -319,9 +326,11 @@ export default function News() {
                   : <p>{selected.Content}</p>
                 }
               </div>
-              <div className={styles.modalActions}>
-                <button className={styles.editBtn} onClick={openEdit}><Pencil size={14} /> Edit Article</button>
-              </div>
+              {allowEdit && (
+                <div className={styles.modalActions}>
+                  <button className={styles.editBtn} onClick={openEdit}><Pencil size={14} /> Edit Article</button>
+                </div>
+              )}
             </>
           )}
         </Modal>

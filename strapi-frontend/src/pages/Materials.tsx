@@ -5,13 +5,16 @@ import {
   createMaterialCategory, deleteMaterial, updateMaterial,
 } from '../api/client'
 import { useAuth } from '../context/AuthContext'
-import { canViewDetail } from '../permissions'
+import { canViewDetail, canEdit, canDelete, canCreate } from '../permissions'
 import Modal from '../components/Modal'
 import { Plus, X, Trash2, Package, Tag, Pencil } from 'lucide-react'
 import styles from './Materials.module.css'
 
 export default function Materials() {
-  const { roleName } = useAuth()
+  const { roleName, capabilities } = useAuth()
+  const allowEdit = canEdit(capabilities, 'materials')
+  const allowDelete = canDelete(capabilities, 'materials')
+  const allowCreate = canCreate(capabilities, 'materials')
   const [materials, setMaterials] = useState<any[]>([])
   const [categories, setCategories] = useState<any[]>([])
   const [selected, setSelected] = useState<any | null>(null)
@@ -131,14 +134,16 @@ export default function Materials() {
           <h1>Materials</h1>
           <p>Manage inventory items and categories</p>
         </div>
-        <div className={styles.headerActions}>
-          <button className={styles.secondaryBtn} onClick={() => setShowCatForm(v => !v)}>
-            <Tag size={15} /> {showCatForm ? 'Cancel' : 'Add Category'}
-          </button>
-          <button className={styles.primaryBtn} onClick={() => setShowForm(true)}>
-            <Plus size={16} /> New Material
-          </button>
-        </div>
+        {allowCreate && (
+          <div className={styles.headerActions}>
+            <button className={styles.secondaryBtn} onClick={() => setShowCatForm(v => !v)}>
+              <Tag size={15} /> {showCatForm ? 'Cancel' : 'Add Category'}
+            </button>
+            <button className={styles.primaryBtn} onClick={() => setShowForm(true)}>
+              <Plus size={16} /> New Material
+            </button>
+          </div>
+        )}
       </div>
 
       {error && !showForm && <div className={styles.error}>{error}</div>}
@@ -248,14 +253,16 @@ export default function Materials() {
               </span>
               <span className={styles.capacity}>{m.Capacity ?? '—'}</span>
               <span className={styles.actions}>
-                <button
-                  className={styles.deleteBtn}
-                  onClick={e => { e.stopPropagation(); handleDelete(m.id, m.documentId) }}
-                  disabled={deletingId === m.id}
-                  title="Delete"
-                >
-                  <Trash2 size={15} />
-                </button>
+                {allowDelete && (
+                  <button
+                    className={styles.deleteBtn}
+                    onClick={e => { e.stopPropagation(); handleDelete(m.id, m.documentId) }}
+                    disabled={deletingId === m.id}
+                    title="Delete"
+                  >
+                    <Trash2 size={15} />
+                  </button>
+                )}
               </span>
             </div>
           ))}
@@ -305,9 +312,11 @@ export default function Materials() {
                 <span className={styles.detailLabel}>Quantity / Capacity</span>
                 <span>{selected.Capacity ?? '—'}</span>
               </div>
-              <div className={styles.modalActions}>
-                <button className={styles.editBtn} onClick={openEdit}><Pencil size={14} /> Edit Material</button>
-              </div>
+              {allowEdit && (
+                <div className={styles.modalActions}>
+                  <button className={styles.editBtn} onClick={openEdit}><Pencil size={14} /> Edit Material</button>
+                </div>
+              )}
             </>
           )}
         </Modal>

@@ -2,13 +2,15 @@ import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import { getEvents, createEvent, updateEvent, getBookings, getMaterials } from '../api/client'
 import { useAuth } from '../context/AuthContext'
-import { canViewDetail } from '../permissions'
+import { canViewDetail, canEdit, canCreate } from '../permissions'
 import Modal from '../components/Modal'
 import { Plus, X, MapPin, Users, Wifi, Package, Pencil, CalendarCheck } from 'lucide-react'
 import styles from './Events.module.css'
 
 export default function Events() {
-  const { roleName } = useAuth()
+  const { roleName, capabilities } = useAuth()
+  const allowEdit = canEdit(capabilities, 'events')
+  const allowCreate = canCreate(capabilities, 'events')
   const [events, setEvents] = useState<any[]>([])
   const [materials, setMaterials] = useState<any[]>([])
   const [confirmedBookings, setConfirmedBookings] = useState<any[]>([])
@@ -159,16 +161,18 @@ export default function Events() {
     <div>
       <div className={styles.pageHeader}>
         <div><h1>Events</h1><p>Each event is tied to one confirmed booking</p></div>
-        <button className={styles.primaryBtn} onClick={() => { setForm(emptyForm); setShowForm(true) }}
-          disabled={noBookingsAvailable}
-          title={noBookingsAvailable ? 'You need an unused confirmed booking first' : ''}>
-          <Plus size={16} /> New Event
-        </button>
+        {allowCreate && (
+          <button className={styles.primaryBtn} onClick={() => { setForm(emptyForm); setShowForm(true) }}
+            disabled={noBookingsAvailable}
+            title={noBookingsAvailable ? 'You need an unused confirmed booking first' : ''}>
+            <Plus size={16} /> New Event
+          </button>
+        )}
       </div>
 
       {error && !showForm && !selected && <div className={styles.error}>{error}</div>}
 
-      {noBookingsAvailable && !loading && !error && (
+      {allowCreate && noBookingsAvailable && !loading && !error && (
         <div className={styles.infoBox}>
           Events can only be created from a <strong>confirmed</strong> booking that isn't already used by another event.
         </div>
@@ -389,9 +393,11 @@ export default function Events() {
                   </div>
                 )}
               </div>
-              <div className={styles.modalActions}>
-                <button className={styles.editBtn} onClick={openEdit}><Pencil size={14} /> Edit Event</button>
-              </div>
+              {allowEdit && (
+                <div className={styles.modalActions}>
+                  <button className={styles.editBtn} onClick={openEdit}><Pencil size={14} /> Edit Event</button>
+                </div>
+              )}
             </>
           )}
         </Modal>
