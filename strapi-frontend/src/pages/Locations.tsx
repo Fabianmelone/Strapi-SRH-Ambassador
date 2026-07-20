@@ -64,6 +64,30 @@ export default function Locations() {
     [`${a.street_name ?? ''} ${a.building_number ?? ''}`.trim(), `${a.postal_code ?? ''} ${a.City ?? ''}`.trim(), a.Country]
       .filter(Boolean).join(', ')
 
+  // Normalized identity of an address, so identical ones collapse to one entry.
+  const addrKey = (a: any) => [
+    (a.street_name ?? '').trim().toLowerCase(),
+    Number(a.building_number) || 0,
+    Number(a.postal_code) || 0,
+    (a.City ?? '').trim().toLowerCase(),
+    (a.Country ?? '').trim().toLowerCase(),
+  ].join('|')
+
+  // Deduplicated address list for the dropdowns (first record of each identity wins).
+  const uniqueAddresses = () => {
+    const seen = new Set<string>()
+    return addresses.filter((a: any) => {
+      const k = addrKey(a)
+      if (seen.has(k)) return false
+      seen.add(k)
+      return true
+    })
+  }
+
+  // Find an existing address matching the typed fields, to avoid creating a duplicate.
+  const findMatchingAddress = (f: typeof form | typeof editForm) =>
+    addresses.find((a: any) => addrKey(a) === addrKey(f))
+
   useEffect(() => {
     fetchAddresses()
     fetchLocations().finally(() => setLoading(false))
@@ -90,15 +114,18 @@ export default function Locations() {
           await updateLocation(locRes.data.data.documentId, { address: Number(existingAddressId) })
         }
       } else if (form.street_name && form.City && form.Country) {
-        // Create a brand-new address for this location.
-        const addrRes = await createAddress({
-          street_name: form.street_name,
-          building_number: Number(form.building_number) || 0,
-          postal_code: Number(form.postal_code) || 0,
-          City: form.City,
-          Country: form.Country,
-        })
-        await updateLocation(locRes.data.data.documentId, { address: addrRes.data.data.id })
+        // Reuse an identical existing address if there is one; otherwise create it.
+        const match = findMatchingAddress(form)
+        const addressId = match
+          ? match.id
+          : (await createAddress({
+              street_name: form.street_name,
+              building_number: Number(form.building_number) || 0,
+              postal_code: Number(form.postal_code) || 0,
+              City: form.City,
+              Country: form.Country,
+            })).data.data.id
+        await updateLocation(locRes.data.data.documentId, { address: addressId })
       }
 
       await Promise.all([fetchLocations(), fetchAddresses()])
@@ -200,8 +227,10 @@ export default function Locations() {
         if (selected.address?.documentId) {
           await updateAddress(selected.address.documentId, addrPayload)
         } else {
-          const addrRes = await createAddress(addrPayload)
-          await updateLocation(selected.documentId, { address: addrRes.data.data.id })
+          // Reuse an identical existing address instead of creating a duplicate.
+          const match = findMatchingAddress(editForm)
+          const addressId = match ? match.id : (await createAddress(addrPayload)).data.data.id
+          await updateLocation(selected.documentId, { address: addressId })
         }
       }
 
@@ -326,7 +355,7 @@ export default function Locations() {
                 <label>Existing Address</label>
                 <select value={existingAddressId} onChange={e => setExistingAddressId(e.target.value)}>
                   <option value="">Select an address…</option>
-                  {addresses.map((a: any) => (
+                  {uniqueAddresses().map((a: any) => (
                     <option key={a.id} value={a.id}>{addressLabel(a)}</option>
                   ))}
                 </select>
@@ -520,7 +549,7 @@ export default function Locations() {
                   <label>Existing Address</label>
                   <select value={editExistingAddressId} onChange={e => setEditExistingAddressId(e.target.value)}>
                     <option value="">No address</option>
-                    {addresses.map((a: any) => (
+                    {uniqueAddresses().map((a: any) => (
                       <option key={a.id} value={a.id}>{addressLabel(a)}</option>
                     ))}
                   </select>

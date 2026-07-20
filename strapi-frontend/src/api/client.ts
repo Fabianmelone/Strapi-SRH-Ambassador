@@ -59,7 +59,7 @@ export const deleteBooking = (id: string) =>
 
 // Events
 export const getEvents = () =>
-  api.get('/events?populate[location]=true&populate[materials]=true&populate[Thumbnail]=true&populate[duration]=true&populate[booking][populate][0]=location&sort=createdAt:desc&status=published')
+  api.get('/events?populate[location]=true&populate[materials]=true&populate[Thumbnail]=true&populate[duration]=true&populate[booking][populate][0]=location&populate[booking][populate][1]=duration&sort=createdAt:desc&status=published')
 
 export const createEvent = (data: {
   Name: string

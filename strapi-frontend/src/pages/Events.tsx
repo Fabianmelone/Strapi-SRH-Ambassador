@@ -26,6 +26,9 @@ export default function Events() {
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [editImageFile, setEditImageFile] = useState<File | null>(null)
   const [editImageCleared, setEditImageCleared] = useState(false)
+  // When true, the event inherits its selected booking's start/end instead of custom times.
+  const [useBookingTime, setUseBookingTime] = useState(true)
+  const [editUseBookingTime, setEditUseBookingTime] = useState(false)
 
   const canClick = canView(capabilities, 'events')
 
@@ -114,12 +117,15 @@ export default function Events() {
         location: bk.location?.id,
         materials: form.materials,
         Thumbnail: thumbnail,
-        duration: { start_datetime: form.start || null, end_datetime: form.end || null },
+        duration: useBookingTime
+          ? { start_datetime: bk.duration?.start_datetime ?? null, end_datetime: bk.duration?.end_datetime ?? null }
+          : { start_datetime: form.start || null, end_datetime: form.end || null },
       })
       await load()
       setShowForm(false)
       setForm(emptyForm)
       setImageFile(null)
+      setUseBookingTime(true)
     } catch (err: any) {
       setError(err?.response?.data?.error?.message || 'Failed to create event.')
     } finally {
@@ -144,6 +150,15 @@ export default function Events() {
     })
     setEditImageFile(null)
     setEditImageCleared(false)
+    // Default to "use booking time" if the event has no custom duration or it
+    // already matches the booking's; otherwise keep the custom values.
+    const bkDur = selected.booking?.duration
+    const evDur = selected.duration
+    const noEvDur = !evDur?.start_datetime && !evDur?.end_datetime
+    const matchesBooking = !!bkDur && !!evDur
+      && bkDur.start_datetime === evDur.start_datetime
+      && bkDur.end_datetime === evDur.end_datetime
+    setEditUseBookingTime(noEvDur || matchesBooking)
     setEditing(true)
   }
 
@@ -173,7 +188,9 @@ export default function Events() {
         booking: bk ? bk.id : undefined,
         location: bk?.location?.id ?? (editForm.location ? Number(editForm.location) : undefined),
         materials: editForm.materials,
-        duration: { start_datetime: editForm.start || null, end_datetime: editForm.end || null },
+        duration: editUseBookingTime
+          ? { start_datetime: bk?.duration?.start_datetime ?? null, end_datetime: bk?.duration?.end_datetime ?? null }
+          : { start_datetime: editForm.start || null, end_datetime: editForm.end || null },
         ...thumbnailField,
       })
       const res = await getEvents()
@@ -257,16 +274,34 @@ export default function Events() {
               <label>Capacity</label>
               <input type="number" min={1} value={form.Capacity} onChange={e => setForm(f => ({ ...f, Capacity: e.target.value }))} required placeholder="50" />
             </div>
-            <div className={styles.fieldRow}>
-              <div className={styles.field}>
-                <label>Start</label>
-                <input type="datetime-local" value={form.start} onChange={e => setForm(f => ({ ...f, start: e.target.value }))} />
-              </div>
-              <div className={styles.field}>
-                <label>End</label>
-                <input type="datetime-local" value={form.end} min={form.start || undefined} onChange={e => setForm(f => ({ ...f, end: e.target.value }))} />
-              </div>
+            <div className={styles.checkRow}>
+              <input type="checkbox" id="use_booking_time" checked={useBookingTime} onChange={e => setUseBookingTime(e.target.checked)} />
+              <label htmlFor="use_booking_time">Use the booking's time</label>
             </div>
+            {useBookingTime ? (
+              (() => {
+                const bk = availableBookings.find((b: any) => String(b.id) === form.booking)
+                const d = bk?.duration
+                return (
+                  <div className={styles.hint}>
+                    {d?.start_datetime
+                      ? `Event will run ${new Date(d.start_datetime).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' })}${d.end_datetime ? ' → ' + new Date(d.end_datetime).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' }) : ''} (from the booking).`
+                      : 'The event will use the selected booking’s time.'}
+                  </div>
+                )
+              })()
+            ) : (
+              <div className={styles.fieldRow}>
+                <div className={styles.field}>
+                  <label>Start</label>
+                  <input type="datetime-local" value={form.start} onChange={e => setForm(f => ({ ...f, start: e.target.value }))} />
+                </div>
+                <div className={styles.field}>
+                  <label>End</label>
+                  <input type="datetime-local" value={form.end} min={form.start || undefined} onChange={e => setForm(f => ({ ...f, end: e.target.value }))} />
+                </div>
+              </div>
+            )}
             <div className={styles.field}>
               <label>Description</label>
               <textarea rows={3} value={form.Description} onChange={e => setForm(f => ({ ...f, Description: e.target.value }))} placeholder="What is this event about?" />
@@ -373,16 +408,22 @@ export default function Events() {
                 <label>Capacity</label>
                 <input type="number" min={1} value={editForm.Capacity} onChange={e => setEditForm(f => ({ ...f, Capacity: e.target.value }))} required />
               </div>
-              <div className={styles.fieldRow}>
-                <div className={styles.field}>
-                  <label>Start</label>
-                  <input type="datetime-local" value={editForm.start} onChange={e => setEditForm(f => ({ ...f, start: e.target.value }))} />
-                </div>
-                <div className={styles.field}>
-                  <label>End</label>
-                  <input type="datetime-local" value={editForm.end} min={editForm.start || undefined} onChange={e => setEditForm(f => ({ ...f, end: e.target.value }))} />
-                </div>
+              <div className={styles.checkRow}>
+                <input type="checkbox" id="edit_use_booking_time" checked={editUseBookingTime} onChange={e => setEditUseBookingTime(e.target.checked)} />
+                <label htmlFor="edit_use_booking_time">Use the booking's time</label>
               </div>
+              {!editUseBookingTime && (
+                <div className={styles.fieldRow}>
+                  <div className={styles.field}>
+                    <label>Start</label>
+                    <input type="datetime-local" value={editForm.start} onChange={e => setEditForm(f => ({ ...f, start: e.target.value }))} />
+                  </div>
+                  <div className={styles.field}>
+                    <label>End</label>
+                    <input type="datetime-local" value={editForm.end} min={editForm.start || undefined} onChange={e => setEditForm(f => ({ ...f, end: e.target.value }))} />
+                  </div>
+                </div>
+              )}
               <div className={styles.field}>
                 <label>Description</label>
                 <textarea rows={3} value={editForm.Description} onChange={e => setEditForm(f => ({ ...f, Description: e.target.value }))} />
