@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import {
   getAllLocations, createLocation, updateLocation,
-  deleteLocation, createAddress, updateAddress, strapiMediaUrl, uploadMedia,
+  deleteLocation, createAddress, updateAddress, getAddresses, strapiMediaUrl, uploadMedia,
 } from '../api/client'
 import { useAuth } from '../context/AuthContext'
 import { canView, canEdit, canDelete, canCreate } from '../permissions'
@@ -31,6 +31,13 @@ export default function Locations() {
   const [imageFiles, setImageFiles] = useState<File[]>([])
   const [editImageFiles, setEditImageFiles] = useState<File[]>([])
   const [editKeptImages, setEditKeptImages] = useState<ExistingImage[]>([])
+  const [addresses, setAddresses] = useState<any[]>([])
+  // Address mode: create form
+  const [useExisting, setUseExisting] = useState(false)
+  const [existingAddressId, setExistingAddressId] = useState('')
+  // Address mode: edit form
+  const [editUseExisting, setEditUseExisting] = useState(false)
+  const [editExistingAddressId, setEditExistingAddressId] = useState('')
   const [editForm, setEditForm] = useState({
     Name: '', type: 'SRH Building', min_capacity: '', max_capacity: '',
     is_available: true,
@@ -48,7 +55,17 @@ export default function Locations() {
       .then(res => { setLocations(res.data.data); })
       .catch(() => setError('Could not connect to backend. Is Strapi running?'))
 
+  // Addresses are optional (used for the "pick existing address" option). Fetch
+  // best-effort so a role without address read still gets the rest of the page.
+  const fetchAddresses = () =>
+    getAddresses().then(res => setAddresses(res.data.data)).catch(() => {})
+
+  const addressLabel = (a: any) =>
+    [`${a.street_name ?? ''} ${a.building_number ?? ''}`.trim(), `${a.postal_code ?? ''} ${a.City ?? ''}`.trim(), a.Country]
+      .filter(Boolean).join(', ')
+
   useEffect(() => {
+    fetchAddresses()
     fetchLocations().finally(() => setLoading(false))
   }, [])
 
@@ -67,7 +84,13 @@ export default function Locations() {
         location_image: imageIds.length ? imageIds : undefined,
       })
 
-      if (form.street_name && form.City && form.Country) {
+      if (useExisting) {
+        // Link an existing (possibly shared) address.
+        if (existingAddressId) {
+          await updateLocation(locRes.data.data.documentId, { address: Number(existingAddressId) })
+        }
+      } else if (form.street_name && form.City && form.Country) {
+        // Create a brand-new address for this location.
         const addrRes = await createAddress({
           street_name: form.street_name,
           building_number: Number(form.building_number) || 0,
@@ -78,9 +101,11 @@ export default function Locations() {
         await updateLocation(locRes.data.data.documentId, { address: addrRes.data.data.id })
       }
 
-      await fetchLocations()
+      await Promise.all([fetchLocations(), fetchAddresses()])
       setShowForm(false)
       setImageFiles([])
+      setUseExisting(false)
+      setExistingAddressId('')
       setForm({
         Name: '', type: 'SRH Building', min_capacity: '', max_capacity: '',
         is_available: true, street_name: '', building_number: '',
@@ -135,6 +160,8 @@ export default function Locations() {
     })
     setEditImageFiles([])
     setEditKeptImages(locationImages(selected))
+    setEditUseExisting(false)
+    setEditExistingAddressId(addr?.id ? String(addr.id) : '')
     setEditing(true)
   }
 
@@ -157,8 +184,12 @@ export default function Locations() {
         location_image: finalIds,
       })
 
-      const hasAddress = editForm.street_name && editForm.City && editForm.Country
-      if (hasAddress) {
+      if (editUseExisting) {
+        // Link a chosen existing address (or detach with null if "none").
+        await updateLocation(selected.documentId, {
+          address: editExistingAddressId ? Number(editExistingAddressId) : (null as unknown as number),
+        })
+      } else if (editForm.street_name && editForm.City && editForm.Country) {
         const addrPayload = {
           street_name: editForm.street_name,
           building_number: Number(editForm.building_number) || 0,
@@ -174,7 +205,7 @@ export default function Locations() {
         }
       }
 
-      await fetchLocations()
+      await Promise.all([fetchLocations(), fetchAddresses()])
       const res = await getAllLocations()
       setSelected(res.data.data.find((l: any) => l.id === selected.id) || null)
       setEditing(false)
@@ -280,52 +311,76 @@ export default function Locations() {
               Address <span className={styles.optional}>(optional)</span>
             </div>
 
-            <div className={styles.fieldRow}>
-              <div className={styles.field}>
-                <label>Street Name</label>
+            {addresses.length > 0 && (
+              <div className={styles.checkRow}>
                 <input
-                  type="text" value={form.street_name}
-                  onChange={e => setForm(f => ({ ...f, street_name: e.target.value }))}
-                  placeholder="Berliner Strasse"
+                  type="checkbox" id="use_existing" checked={useExisting}
+                  onChange={e => setUseExisting(e.target.checked)}
                 />
+                <label htmlFor="use_existing">Use an existing address</label>
               </div>
-              <div className={styles.field}>
-                <label>Building Number</label>
-                <input
-                  type="number" min={1} value={form.building_number}
-                  onChange={e => setForm(f => ({ ...f, building_number: e.target.value }))}
-                  placeholder="12"
-                />
-              </div>
-            </div>
+            )}
 
-            <div className={styles.fieldRow}>
+            {useExisting ? (
               <div className={styles.field}>
-                <label>Postal Code</label>
-                <input
-                  type="number" value={form.postal_code}
-                  onChange={e => setForm(f => ({ ...f, postal_code: e.target.value }))}
-                  placeholder="10115"
-                />
+                <label>Existing Address</label>
+                <select value={existingAddressId} onChange={e => setExistingAddressId(e.target.value)}>
+                  <option value="">Select an address…</option>
+                  {addresses.map((a: any) => (
+                    <option key={a.id} value={a.id}>{addressLabel(a)}</option>
+                  ))}
+                </select>
               </div>
-              <div className={styles.field}>
-                <label>City</label>
-                <input
-                  type="text" value={form.City}
-                  onChange={e => setForm(f => ({ ...f, City: e.target.value }))}
-                  placeholder="Berlin"
-                />
-              </div>
-            </div>
+            ) : (
+              <>
+                <div className={styles.fieldRow}>
+                  <div className={styles.field}>
+                    <label>Street Name</label>
+                    <input
+                      type="text" value={form.street_name}
+                      onChange={e => setForm(f => ({ ...f, street_name: e.target.value }))}
+                      placeholder="Berliner Strasse"
+                    />
+                  </div>
+                  <div className={styles.field}>
+                    <label>Building Number</label>
+                    <input
+                      type="number" min={1} value={form.building_number}
+                      onChange={e => setForm(f => ({ ...f, building_number: e.target.value }))}
+                      placeholder="12"
+                    />
+                  </div>
+                </div>
 
-            <div className={styles.field}>
-              <label>Country</label>
-              <input
-                type="text" value={form.Country}
-                onChange={e => setForm(f => ({ ...f, Country: e.target.value }))}
-                placeholder="Germany"
-              />
-            </div>
+                <div className={styles.fieldRow}>
+                  <div className={styles.field}>
+                    <label>Postal Code</label>
+                    <input
+                      type="number" value={form.postal_code}
+                      onChange={e => setForm(f => ({ ...f, postal_code: e.target.value }))}
+                      placeholder="10115"
+                    />
+                  </div>
+                  <div className={styles.field}>
+                    <label>City</label>
+                    <input
+                      type="text" value={form.City}
+                      onChange={e => setForm(f => ({ ...f, City: e.target.value }))}
+                      placeholder="Berlin"
+                    />
+                  </div>
+                </div>
+
+                <div className={styles.field}>
+                  <label>Country</label>
+                  <input
+                    type="text" value={form.Country}
+                    onChange={e => setForm(f => ({ ...f, Country: e.target.value }))}
+                    placeholder="Germany"
+                  />
+                </div>
+              </>
+            )}
 
             <div className={styles.formActions}>
               <button type="button" className={styles.cancelBtn} onClick={() => setShowForm(false)}>Cancel</button>
@@ -451,30 +506,53 @@ export default function Locations() {
               <div className={styles.sectionLabel} style={{ marginTop: 8 }}>
                 Address <span className={styles.optional}>(optional)</span>
               </div>
-              <div className={styles.fieldRow}>
-                <div className={styles.field}>
-                  <label>Street Name</label>
-                  <input type="text" value={editForm.street_name} onChange={e => setEditForm(f => ({ ...f, street_name: e.target.value }))} />
+              {addresses.length > 0 && (
+                <div className={styles.checkRow}>
+                  <input
+                    type="checkbox" id="edit_use_existing" checked={editUseExisting}
+                    onChange={e => setEditUseExisting(e.target.checked)}
+                  />
+                  <label htmlFor="edit_use_existing">Link an existing address instead</label>
                 </div>
+              )}
+              {editUseExisting ? (
                 <div className={styles.field}>
-                  <label>Building Number</label>
-                  <input type="number" min={1} value={editForm.building_number} onChange={e => setEditForm(f => ({ ...f, building_number: e.target.value }))} />
+                  <label>Existing Address</label>
+                  <select value={editExistingAddressId} onChange={e => setEditExistingAddressId(e.target.value)}>
+                    <option value="">No address</option>
+                    {addresses.map((a: any) => (
+                      <option key={a.id} value={a.id}>{addressLabel(a)}</option>
+                    ))}
+                  </select>
                 </div>
-              </div>
-              <div className={styles.fieldRow}>
-                <div className={styles.field}>
-                  <label>Postal Code</label>
-                  <input type="number" value={editForm.postal_code} onChange={e => setEditForm(f => ({ ...f, postal_code: e.target.value }))} />
-                </div>
-                <div className={styles.field}>
-                  <label>City</label>
-                  <input type="text" value={editForm.City} onChange={e => setEditForm(f => ({ ...f, City: e.target.value }))} />
-                </div>
-              </div>
-              <div className={styles.field}>
-                <label>Country</label>
-                <input type="text" value={editForm.Country} onChange={e => setEditForm(f => ({ ...f, Country: e.target.value }))} />
-              </div>
+              ) : (
+                <>
+                  <div className={styles.fieldRow}>
+                    <div className={styles.field}>
+                      <label>Street Name</label>
+                      <input type="text" value={editForm.street_name} onChange={e => setEditForm(f => ({ ...f, street_name: e.target.value }))} />
+                    </div>
+                    <div className={styles.field}>
+                      <label>Building Number</label>
+                      <input type="number" min={1} value={editForm.building_number} onChange={e => setEditForm(f => ({ ...f, building_number: e.target.value }))} />
+                    </div>
+                  </div>
+                  <div className={styles.fieldRow}>
+                    <div className={styles.field}>
+                      <label>Postal Code</label>
+                      <input type="number" value={editForm.postal_code} onChange={e => setEditForm(f => ({ ...f, postal_code: e.target.value }))} />
+                    </div>
+                    <div className={styles.field}>
+                      <label>City</label>
+                      <input type="text" value={editForm.City} onChange={e => setEditForm(f => ({ ...f, City: e.target.value }))} />
+                    </div>
+                  </div>
+                  <div className={styles.field}>
+                    <label>Country</label>
+                    <input type="text" value={editForm.Country} onChange={e => setEditForm(f => ({ ...f, Country: e.target.value }))} />
+                  </div>
+                </>
+              )}
               <div className={styles.formActions}>
                 <button type="button" className={styles.cancelBtn} onClick={() => setEditing(false)}>Cancel</button>
                 <button type="submit" className={styles.primaryBtn} disabled={savingEdit}>

@@ -1,17 +1,16 @@
 {
-  "collectionName": "components_material_materials",
+  "collectionName": "components_shared_durations",
   "info": {
     "displayName": "Duration",
     "icon": "clock"
   },
   "options": {},
   "attributes": {
-    "Start": {
+    "start_datetime": {
       "type": "datetime"
     },
-    "End": {
+    "end_datetime": {
       "type": "datetime"
     }
-  },
-  "config": {}
+  }
 }

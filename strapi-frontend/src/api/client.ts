@@ -32,19 +32,26 @@ export const getLocations = () =>
   api.get('/locations?populate[0]=address&filters[is_available][$eq]=true&status=published')
 
 // Bookings
+export interface DurationInput {
+  start_datetime?: string | null
+  end_datetime?: string | null
+}
+
 export const getBookings = () =>
-  api.get('/bookings?populate[0]=location&sort=Booking_Date_Time:desc&status=published')
+  api.get('/bookings?populate[location]=true&populate[duration]=true&sort=Booking_Date_Time:desc&status=published')
 
 export const createBooking = (data: {
   Booking_Date_Time: string
   location: number
   Booking_Status: string
+  duration?: DurationInput
 }) => api.post('/bookings?status=published', { data })
 
 export const updateBooking = (id: string, data: Partial<{
   Booking_Date_Time: string
   location: number
   Booking_Status: string
+  duration: DurationInput
 }>) => api.put(`/bookings/${id}?status=published`, { data })
 
 export const deleteBooking = (id: string) =>
@@ -52,7 +59,7 @@ export const deleteBooking = (id: string) =>
 
 // Events
 export const getEvents = () =>
-  api.get('/events?populate[location]=true&populate[materials]=true&populate[Thumbnail]=true&populate[booking][populate][0]=location&sort=createdAt:desc&status=published')
+  api.get('/events?populate[location]=true&populate[materials]=true&populate[Thumbnail]=true&populate[duration]=true&populate[booking][populate][0]=location&sort=createdAt:desc&status=published')
 
 export const createEvent = (data: {
   Name: string
@@ -65,6 +72,7 @@ export const createEvent = (data: {
   booking: number
   materials?: number[]
   Thumbnail?: number
+  duration?: DurationInput
 }) => api.post('/events?status=published', { data })
 
 export const updateEvent = (id: string, data: Partial<{
@@ -78,6 +86,7 @@ export const updateEvent = (id: string, data: Partial<{
   booking: number
   materials: number[]
   Thumbnail: number
+  duration: DurationInput
 }>) => api.put(`/events/${id}?status=published`, { data })
 
 export const deleteEvent = (id: string) =>
@@ -134,7 +143,7 @@ export const deleteMaterial = (id: string) =>
 
 // Addresses
 export const getAddresses = () =>
-  api.get('/addresses?populate[0]=location&sort=City:asc&status=published')
+  api.get('/addresses?populate[0]=locations&sort=City:asc&status=published')
 
 export const createAddress = (data: {
   street_name: string

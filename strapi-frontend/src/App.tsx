@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 // App.css intentionally empty
 import { AuthProvider, useAuth } from './context/AuthContext'
+import { canSeeSection } from './permissions'
 import Layout from './components/Layout'
 import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
@@ -11,12 +12,12 @@ import Locations from './pages/Locations'
 import Materials from './pages/Materials'
 
 function ProtectedRoute({ section, children }: { section?: string; children: React.ReactNode }) {
-  const { user, loading, access, accessLoading } = useAuth()
+  const { user, loading, capabilities, accessLoading } = useAuth()
   if (loading) return null
   if (!user) return <Navigate to="/login" replace />
   if (section) {
     if (accessLoading) return <Layout>{null}</Layout>
-    if (!access[section]) return <Navigate to="/" replace />
+    if (!canSeeSection(capabilities, section)) return <Navigate to="/" replace />
   }
   return <Layout>{children}</Layout>
 }

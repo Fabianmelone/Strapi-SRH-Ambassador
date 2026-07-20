@@ -26,11 +26,11 @@
     "postal_code": {
       "type": "integer"
     },
-    "location": {
+    "locations": {
       "type": "relation",
-      "relation": "oneToOne",
+      "relation": "oneToMany",
       "target": "api::location.location",
-      "inversedBy": "address"
+      "mappedBy": "address"
     }
   }
 }

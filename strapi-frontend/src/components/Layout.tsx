@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { canSeeSection } from '../permissions'
 import { CalendarDays, MapPin, Newspaper, LogOut, LayoutDashboard, Package, Megaphone, Menu, ChevronLeft } from 'lucide-react'
 import styles from './Layout.module.css'
 import srhLogo from '../assets/srh-logo-white.png'
@@ -15,7 +16,7 @@ const NAV_ITEMS = [
 ]
 
 export default function Layout({ children }: { children: React.ReactNode }) {
-  const { user, logout, access, accessLoading } = useAuth()
+  const { user, logout, capabilities, accessLoading } = useAuth()
   const navigate = useNavigate()
   const [expanded, setExpanded] = useState(() => localStorage.getItem('sidebar_expanded') === 'true')
 
@@ -32,7 +33,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   }
 
   const visibleItems = NAV_ITEMS.filter(item =>
-    item.section === null ? true : !accessLoading && access[item.section]
+    item.section === null ? true : !accessLoading && canSeeSection(capabilities, item.section)
   )
 
   return (

@@ -500,7 +500,7 @@ export interface ApiAddressAddress extends Struct.CollectionTypeSchema {
       'api::address.address'
     > &
       Schema.Attribute.Private;
-    location: Schema.Attribute.Relation<'oneToOne', 'api::location.location'>;
+    locations: Schema.Attribute.Relation<'oneToMany', 'api::location.location'>;
     postal_code: Schema.Attribute.Integer;
     publishedAt: Schema.Attribute.DateTime;
     street_name: Schema.Attribute.String;
@@ -529,7 +529,7 @@ export interface ApiBookingBooking extends Struct.CollectionTypeSchema {
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
-    Duration: Schema.Attribute.Component<'material.material', false>;
+    duration: Schema.Attribute.Component<'shared.duration', false>;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
       'oneToMany',
@@ -562,12 +562,12 @@ export interface ApiEventEvent extends Struct.CollectionTypeSchema {
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
     Description: Schema.Attribute.Text;
+    duration: Schema.Attribute.Component<'shared.duration', false>;
     Is_online: Schema.Attribute.Boolean;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<'oneToMany', 'api::event.event'> &
       Schema.Attribute.Private;
     location: Schema.Attribute.Relation<'manyToOne', 'api::location.location'>;
-    material: Schema.Attribute.Component<'material.material', false>;
     materials: Schema.Attribute.Relation<'oneToMany', 'api::material.material'>;
     Meeting_Link: Schema.Attribute.String;
     Name: Schema.Attribute.String &
@@ -592,7 +592,7 @@ export interface ApiLocationLocation extends Struct.CollectionTypeSchema {
     draftAndPublish: true;
   };
   attributes: {
-    address: Schema.Attribute.Relation<'oneToOne', 'api::address.address'>;
+    address: Schema.Attribute.Relation<'manyToOne', 'api::address.address'>;
     bookings: Schema.Attribute.Relation<'oneToMany', 'api::booking.booking'>;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &

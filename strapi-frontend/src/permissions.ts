@@ -66,3 +66,20 @@ export function canDelete(caps: Capabilities, section: string): boolean {
 export function canView(caps: Capabilities, section: string): boolean {
   return caps[section]?.read ?? false
 }
+
+// Sections that are pure "management" pages: they should only appear in the nav
+// for roles that can actually manage the content, not roles that merely have
+// read access for another purpose (e.g. attaching materials to an event).
+const MANAGEMENT_SECTIONS = new Set(['materials'])
+
+// Whether a section's page + nav entry should be shown to the current role.
+// Normally that's read access; for management sections it requires the ability
+// to create/update/delete, so read-only-for-relations roles don't see the page.
+export function canSeeSection(caps: Capabilities, section: string): boolean {
+  const c = caps[section]
+  if (!c) return false
+  if (MANAGEMENT_SECTIONS.has(section)) {
+    return c.create || c.update || c.delete
+  }
+  return c.read
+}

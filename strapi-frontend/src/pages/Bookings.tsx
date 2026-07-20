@@ -20,12 +20,12 @@ export default function Bookings() {
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
   const [editing, setEditing] = useState(false)
-  const [editForm, setEditForm] = useState({ Booking_Status: '', location: '', Booking_Date_Time: '' })
+  const [editForm, setEditForm] = useState({ Booking_Status: '', location: '', start: '', end: '' })
   const [savingEdit, setSavingEdit] = useState(false)
 
   const canClick = canView(capabilities, 'bookings')
 
-  const [form, setForm] = useState({ location: '', Booking_Date_Time: '' })
+  const [form, setForm] = useState({ location: '', start: '', end: '' })
 
   useEffect(() => {
     Promise.all([getBookings(), getLocations()])
@@ -40,14 +40,15 @@ export default function Bookings() {
     setSubmitting(true)
     try {
       await createBooking({
-        Booking_Date_Time: form.Booking_Date_Time,
+        Booking_Date_Time: form.start,
         location: Number(form.location),
         Booking_Status: 'pending',
+        duration: { start_datetime: form.start || null, end_datetime: form.end || null },
       })
       const res = await getBookings()
       setBookings(res.data.data)
       setShowForm(false)
-      setForm({ location: '', Booking_Date_Time: '' })
+      setForm({ location: '', start: '', end: '' })
     } catch (err: any) {
       setError(err?.response?.data?.error?.message || 'Failed to create booking.')
     } finally {
@@ -55,14 +56,15 @@ export default function Bookings() {
     }
   }
 
+  const toLocal = (iso?: string | null) => (iso ? new Date(iso).toISOString().slice(0, 16) : '')
+
   const openEdit = () => {
     if (!selected) return
     setEditForm({
       Booking_Status: selected.Booking_Status || 'pending',
       location: selected.location?.id ? String(selected.location.id) : '',
-      Booking_Date_Time: selected.Booking_Date_Time
-        ? new Date(selected.Booking_Date_Time).toISOString().slice(0, 16)
-        : '',
+      start: toLocal(selected.duration?.start_datetime || selected.Booking_Date_Time),
+      end: toLocal(selected.duration?.end_datetime),
     })
     setEditing(true)
   }
@@ -76,7 +78,8 @@ export default function Bookings() {
       await updateBooking(selected.documentId, {
         Booking_Status: editForm.Booking_Status,
         location: editForm.location ? Number(editForm.location) : undefined,
-        Booking_Date_Time: editForm.Booking_Date_Time || undefined,
+        Booking_Date_Time: editForm.start || undefined,
+        duration: { start_datetime: editForm.start || null, end_datetime: editForm.end || null },
       })
       const res = await getBookings()
       setBookings(res.data.data)
@@ -142,9 +145,15 @@ export default function Bookings() {
                 ))}
               </select>
             </div>
-            <div className={styles.field}>
-              <label>Date & Time</label>
-              <input type="datetime-local" value={form.Booking_Date_Time} onChange={e => setForm(f => ({ ...f, Booking_Date_Time: e.target.value }))} required />
+            <div className={styles.fieldRow}>
+              <div className={styles.field}>
+                <label>Start</label>
+                <input type="datetime-local" value={form.start} onChange={e => setForm(f => ({ ...f, start: e.target.value }))} required />
+              </div>
+              <div className={styles.field}>
+                <label>End</label>
+                <input type="datetime-local" value={form.end} min={form.start || undefined} onChange={e => setForm(f => ({ ...f, end: e.target.value }))} required />
+              </div>
             </div>
             <div className={styles.formActions}>
               <button type="button" className={styles.cancelBtn} onClick={() => setShowForm(false)}>Cancel</button>
@@ -218,9 +227,15 @@ export default function Bookings() {
                     ))}
                   </select>
                 </div>
-                <div className={styles.field}>
-                  <label>Date & Time</label>
-                  <input type="datetime-local" value={editForm.Booking_Date_Time} onChange={e => setEditForm(f => ({ ...f, Booking_Date_Time: e.target.value }))} required />
+                <div className={styles.fieldRow}>
+                  <div className={styles.field}>
+                    <label>Start</label>
+                    <input type="datetime-local" value={editForm.start} onChange={e => setEditForm(f => ({ ...f, start: e.target.value }))} required />
+                  </div>
+                  <div className={styles.field}>
+                    <label>End</label>
+                    <input type="datetime-local" value={editForm.end} min={editForm.start || undefined} onChange={e => setEditForm(f => ({ ...f, end: e.target.value }))} required />
+                  </div>
                 </div>
                 <div className={styles.formActions}>
                   <button type="button" className={styles.cancelBtn} onClick={() => setEditing(false)}>Cancel</button>
@@ -236,11 +251,15 @@ export default function Bookings() {
                   <span>{selected.location?.Name ?? '—'}</span>
                 </div>
                 <div className={styles.detailRow}>
-                  <span className={styles.detailLabel}>Date & Time</span>
+                  <span className={styles.detailLabel}>Duration</span>
                   <span>
-                    {selected.Booking_Date_Time
-                      ? new Date(selected.Booking_Date_Time).toLocaleString('en-GB', { dateStyle: 'long', timeStyle: 'short' })
-                      : '—'}
+                    {(() => {
+                      const s = selected.duration?.start_datetime || selected.Booking_Date_Time
+                      const en = selected.duration?.end_datetime
+                      const fmt = (d: string) => new Date(d).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' })
+                      if (!s) return '—'
+                      return en ? `${fmt(s)} → ${fmt(en)}` : fmt(s)
+                    })()}
                   </span>
                 </div>
                 <div className={styles.detailRow}>

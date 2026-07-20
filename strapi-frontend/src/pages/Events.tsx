@@ -32,6 +32,7 @@ export default function Events() {
   const emptyForm = {
     Name: '', Access: 'Public', Capacity: '', Is_online: false,
     Meeting_Link: '', Description: '', booking: '', location: '', materials: [] as number[],
+    start: '', end: '',
   }
   const [form, setForm] = useState(emptyForm)
   const [editForm, setEditForm] = useState(emptyForm)
@@ -113,6 +114,7 @@ export default function Events() {
         location: bk.location?.id,
         materials: form.materials,
         Thumbnail: thumbnail,
+        duration: { start_datetime: form.start || null, end_datetime: form.end || null },
       })
       await load()
       setShowForm(false)
@@ -137,6 +139,8 @@ export default function Events() {
       booking: selected.booking?.id ? String(selected.booking.id) : '',
       location: selected.location?.id ? String(selected.location.id) : '',
       materials: Array.isArray(selected.materials) ? selected.materials.map((m: any) => m.id) : [],
+      start: selected.duration?.start_datetime ? new Date(selected.duration.start_datetime).toISOString().slice(0, 16) : '',
+      end: selected.duration?.end_datetime ? new Date(selected.duration.end_datetime).toISOString().slice(0, 16) : '',
     })
     setEditImageFile(null)
     setEditImageCleared(false)
@@ -169,6 +173,7 @@ export default function Events() {
         booking: bk ? bk.id : undefined,
         location: bk?.location?.id ?? (editForm.location ? Number(editForm.location) : undefined),
         materials: editForm.materials,
+        duration: { start_datetime: editForm.start || null, end_datetime: editForm.end || null },
         ...thumbnailField,
       })
       const res = await getEvents()
@@ -251,6 +256,16 @@ export default function Events() {
             <div className={styles.field}>
               <label>Capacity</label>
               <input type="number" min={1} value={form.Capacity} onChange={e => setForm(f => ({ ...f, Capacity: e.target.value }))} required placeholder="50" />
+            </div>
+            <div className={styles.fieldRow}>
+              <div className={styles.field}>
+                <label>Start</label>
+                <input type="datetime-local" value={form.start} onChange={e => setForm(f => ({ ...f, start: e.target.value }))} />
+              </div>
+              <div className={styles.field}>
+                <label>End</label>
+                <input type="datetime-local" value={form.end} min={form.start || undefined} onChange={e => setForm(f => ({ ...f, end: e.target.value }))} />
+              </div>
             </div>
             <div className={styles.field}>
               <label>Description</label>
@@ -358,6 +373,16 @@ export default function Events() {
                 <label>Capacity</label>
                 <input type="number" min={1} value={editForm.Capacity} onChange={e => setEditForm(f => ({ ...f, Capacity: e.target.value }))} required />
               </div>
+              <div className={styles.fieldRow}>
+                <div className={styles.field}>
+                  <label>Start</label>
+                  <input type="datetime-local" value={editForm.start} onChange={e => setEditForm(f => ({ ...f, start: e.target.value }))} />
+                </div>
+                <div className={styles.field}>
+                  <label>End</label>
+                  <input type="datetime-local" value={editForm.end} min={editForm.start || undefined} onChange={e => setEditForm(f => ({ ...f, end: e.target.value }))} />
+                </div>
+              </div>
               <div className={styles.field}>
                 <label>Description</label>
                 <textarea rows={3} value={editForm.Description} onChange={e => setEditForm(f => ({ ...f, Description: e.target.value }))} />
@@ -430,6 +455,20 @@ export default function Events() {
                   <div className={styles.detailRow}>
                     <span className={styles.detailLabel}>Capacity</span>
                     <span>{selected.Capacity} people</span>
+                  </div>
+                )}
+                {(selected.duration?.start_datetime || selected.duration?.end_datetime) && (
+                  <div className={styles.detailRow}>
+                    <span className={styles.detailLabel}>Duration</span>
+                    <span>
+                      {(() => {
+                        const fmt = (d: string) => new Date(d).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' })
+                        const s = selected.duration?.start_datetime
+                        const en = selected.duration?.end_datetime
+                        if (s && en) return `${fmt(s)} → ${fmt(en)}`
+                        return fmt(s || en)
+                      })()}
+                    </span>
                   </div>
                 )}
                 <div className={styles.detailRow}>

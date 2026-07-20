@@ -25,9 +25,9 @@
     },
     "address": {
       "type": "relation",
-      "relation": "oneToOne",
+      "relation": "manyToOne",
       "target": "api::address.address",
-      "mappedBy": "location"
+      "inversedBy": "locations"
     },
     "min_capacity": {
       "type": "integer"

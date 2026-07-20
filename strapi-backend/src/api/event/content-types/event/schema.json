@@ -23,9 +23,9 @@
         "Public"
       ]
     },
-    "material": {
+    "duration": {
       "type": "component",
-      "component": "material.material",
+      "component": "shared.duration",
       "repeatable": false
     },
     "location": {
