@@ -2,6 +2,7 @@ import { NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { CalendarDays, MapPin, Newspaper, LogOut, LayoutDashboard, Package, Building2 } from 'lucide-react'
 import styles from './Layout.module.css'
+import srhLogo from '../assets/srh-logo-no-background.png'
 
 const NAV_ITEMS = [
   { to: '/bookings',  section: 'bookings',  label: 'Bookings',  Icon: CalendarDays },
@@ -26,7 +27,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     <div className={styles.shell}>
       <aside className={styles.sidebar}>
         <div className={styles.logo}>
-          <span className={styles.logoAccent}>SRH</span>
+          <img src={srhLogo} alt="SRH Logo" />
           <span>Ambassador</span>
         </div>
 

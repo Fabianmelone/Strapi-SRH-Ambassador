@@ -31,12 +31,20 @@ export default function Events() {
   const [form, setForm] = useState(emptyForm)
   const [editForm, setEditForm] = useState(emptyForm)
 
-  const load = () =>
-    Promise.all([getEvents(), getBookings(), getMaterials()]).then(([e, b, m]) => {
-      setEvents(e.data.data)
-      setMaterials(m.data.data)
-      setConfirmedBookings(b.data.data.filter((bk: any) => bk.Booking_Status === 'confirmed'))
-    })
+  const load = async () => {
+    // Events are the primary data — a failure here is a real error.
+    const e = await getEvents()
+    setEvents(e.data.data)
+    // Bookings and materials are only needed to create/edit events. A role that
+    // can read events but not these should still see the list, so we fetch them
+    // best-effort and ignore permission failures.
+    const [b, m] = await Promise.all([
+      getBookings().catch(() => null),
+      getMaterials().catch(() => null),
+    ])
+    if (b) setConfirmedBookings(b.data.data.filter((bk: any) => bk.Booking_Status === 'confirmed'))
+    if (m) setMaterials(m.data.data)
+  }
 
   useEffect(() => {
     load()
