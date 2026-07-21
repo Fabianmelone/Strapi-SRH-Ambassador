@@ -713,7 +713,17 @@ export interface ApiNewsArticleNewsArticle extends Struct.CollectionTypeSchema {
       'oneToOne',
       'plugin::users-permissions.user'
     >;
-    category: Schema.Attribute.Enumeration<['Blog', 'Sports', 'Fashion']> &
+    category: Schema.Attribute.Enumeration<
+      [
+        'Blog',
+        'Announcement',
+        'Fashion',
+        'Music',
+        'Culture',
+        'Events',
+        'Campus',
+      ]
+    > &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
           localized: true;

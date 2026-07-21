@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
-import { getNewsArticles, createNewsArticle, updateNewsArticle, deleteNewsArticle, strapiMediaUrl, uploadMedia } from '../api/client'
+import { getNewsArticles, getNewsCategories, createNewsArticle, updateNewsArticle, deleteNewsArticle, strapiMediaUrl, uploadMedia } from '../api/client'
 import { useAuth } from '../context/AuthContext'
 import { canView, canEdit, canDelete, canCreate } from '../permissions'
 import Modal from '../components/Modal'
@@ -27,6 +27,7 @@ export default function News() {
   const [thumbFile, setThumbFile] = useState<File | null>(null)
   const [editThumbFile, setEditThumbFile] = useState<File | null>(null)
   const [editThumbCleared, setEditThumbCleared] = useState(false)
+  const [categories, setCategories] = useState<string[]>([])
 
   const canClick = canView(capabilities, 'news')
 
@@ -45,6 +46,20 @@ export default function News() {
       ))
 
   useEffect(() => { fetchArticles().finally(() => setLoading(false)) }, [])
+
+  // Load the category options from the backend so they never drift out of sync.
+  useEffect(() => {
+    getNewsCategories()
+      .then(res => {
+        const cats: string[] = res.data?.categories ?? []
+        setCategories(cats)
+        // Default new/edit forms to the first real category.
+        if (cats.length) {
+          setForm(f => (cats.includes(f.category) ? f : { ...f, category: cats[0] }))
+        }
+      })
+      .catch(() => { /* keep going; dropdown just falls back to the article's own value */ })
+  }, [])
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
@@ -139,10 +154,21 @@ export default function News() {
 
   const closeModal = () => { setSelected(null); setEditing(false); setError('') }
 
-  const categoryColor: Record<string, { color: string; bg: string }> = {
-    Blog:    { color: '#1e40af', bg: '#dbeafe' },
-    Sports:  { color: '#166534', bg: '#dcfce7' },
-    Fashion: { color: '#6b21a8', bg: '#f3e8ff' },
+  // Colours are assigned per category from a fixed palette, so any category the
+  // backend defines gets a distinct, stable badge colour.
+  const PALETTE = [
+    { color: '#1e40af', bg: '#dbeafe' }, // blue
+    { color: '#166534', bg: '#dcfce7' }, // green
+    { color: '#6b21a8', bg: '#f3e8ff' }, // purple
+    { color: '#b45309', bg: '#fef3c7' }, // amber
+    { color: '#be123c', bg: '#ffe4e6' }, // rose
+    { color: '#0f766e', bg: '#ccfbf1' }, // teal
+    { color: '#4338ca', bg: '#e0e7ff' }, // indigo
+    { color: '#a16207', bg: '#fef9c3' }, // yellow
+  ]
+  const catMeta = (cat: string) => {
+    const idx = categories.indexOf(cat)
+    return PALETTE[(idx >= 0 ? idx : 0) % PALETTE.length]
   }
 
   const thumbUrl = (a: any): string | null => {
@@ -190,9 +216,7 @@ export default function News() {
               <div className={styles.field}>
                 <label>Category</label>
                 <select value={form.category} onChange={e => setForm(f => ({ ...f, category: e.target.value }))}>
-                  <option value="Blog">Blog</option>
-                  <option value="Sports">Sports</option>
-                  <option value="Fashion">Fashion</option>
+                  {categories.map(c => <option key={c} value={c}>{c}</option>)}
                 </select>
               </div>
               <div className={styles.field}>
@@ -225,8 +249,8 @@ export default function News() {
       ) : (
         <div className={styles.list}>
           {articles.map((a: any) => {
-            const cat = a.category || 'Blog'
-            const catMeta = categoryColor[cat] || categoryColor.Blog
+            const cat = a.category || categories[0] || ''
+            const meta = catMeta(cat)
             const text = extractText(a.Content)
             const thumb = thumbUrl(a)
             return (
@@ -244,7 +268,7 @@ export default function News() {
                   <h3 className={styles.articleTitle}>{a.title}</h3>
                   {text && <p className={styles.articleExcerpt}>{text}{text.length >= 140 ? '…' : ''}</p>}
                   <div className={styles.articleMeta}>
-                    <span className={styles.catBadge} style={{ color: catMeta.color, background: catMeta.bg }}>
+                    <span className={styles.catBadge} style={{ color: meta.color, background: meta.bg }}>
                       <Tag size={11} /> {cat}
                     </span>
                   </div>
@@ -278,9 +302,10 @@ export default function News() {
                 <div className={styles.field}>
                   <label>Category</label>
                   <select value={editForm.category} onChange={e => setEditForm(f => ({ ...f, category: e.target.value }))}>
-                    <option value="Blog">Blog</option>
-                    <option value="Sports">Sports</option>
-                    <option value="Fashion">Fashion</option>
+                    {/* include the article's current value even if it's no longer in the enum */}
+                    {(categories.includes(editForm.category) ? categories : [editForm.category, ...categories]).map(c => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
                   </select>
                 </div>
                 <div className={styles.field}>
@@ -315,9 +340,9 @@ export default function News() {
               )}
               <div className={styles.detailMeta}>
                 {(() => {
-                  const catMeta = categoryColor[selected.category] || categoryColor.Blog
+                  const meta = catMeta(selected.category)
                   return (
-                    <span className={styles.catBadge} style={{ color: catMeta.color, background: catMeta.bg }}>
+                    <span className={styles.catBadge} style={{ color: meta.color, background: meta.bg }}>
                       <Tag size={11} /> {selected.category}
                     </span>
                   )

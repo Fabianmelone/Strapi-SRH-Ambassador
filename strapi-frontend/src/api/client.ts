@@ -104,6 +104,10 @@ export const unregisterFromEvent = (id: string) =>
 export const getNewsArticles = () =>
   api.get('/news-articles?populate=*&sort=createdAt:desc')
 
+// The category enum, straight from the backend schema (keeps the UI in sync).
+export const getNewsCategories = () =>
+  api.get('/news-articles/categories')
+
 export const createNewsArticle = (data: {
   title: string
   category: string

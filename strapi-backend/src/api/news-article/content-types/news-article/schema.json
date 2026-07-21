@@ -38,8 +38,12 @@
       },
       "enum": [
         "Blog",
-        "Sports",
-        "Fashion"
+        "Announcement",
+        "Fashion",
+        "Music",
+        "Culture",
+        "Events",
+        "Campus"
       ]
     },
     "Content": {
